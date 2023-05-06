@@ -251,13 +251,11 @@ public class Main {
         List<File> files = listFilesInDir(rootContentDir, new ArrayList<>());
         class MenuItem implements Comparable<MenuItem> {
 
-            String htmlElementA;
             String doubleDotsSlash;
             String visibleName;
             String fileName;
 
-            public MenuItem(String htmlElementA, String doubleDotsSlash, String visibleName, String fileName) {
-                this.htmlElementA = htmlElementA;
+            public MenuItem(String doubleDotsSlash, String visibleName, String fileName) {
                 this.doubleDotsSlash = doubleDotsSlash;
                 this.visibleName = visibleName;
                 this.fileName = fileName;
@@ -331,8 +329,9 @@ public class Main {
 
             @Override
             public String toString() {
-                return "MenuItem{" + "htmlElementA=" + htmlElementA + ", visibleName=" + visibleName + ", fileName=" + fileName + '}';
+                return "MenuItem{" + "..=" + doubleDotsSlash + ";visibleName=" + visibleName + ";fileName=" + fileName + '}';
             }
+
 
         }
         List<MenuItem> menuItems = new ArrayList<>();
@@ -351,35 +350,19 @@ public class Main {
             String visibleName = path.split("/generated/")[1];
             StringBuilder htmlElementASB = new StringBuilder();
             String doubleDotsSlash = createDoubleDotSlash(countOfStepsToBaseDirectory);
-            htmlElementASB
-                    .append("<a href=\"")
-                    .append(doubleDotsSlash).append(visibleName)
-                    .append("\">")
-                    .append(visibleName)
-                    .append("</a>");
-            String htmlElementA = htmlElementASB.toString();
-            sb.append(htmlElementA).append("<br>");
-            menuItems.add(new MenuItem(htmlElementA, doubleDotsSlash, visibleName, f.getName()));
+
+            menuItems.add(new MenuItem(doubleDotsSlash, visibleName, f.getName()));
         }
         Collections.sort(menuItems);
-        StringBuilder sb2 = new StringBuilder("<hr><hr>");
-        for (MenuItem mi : menuItems) {
-            sb2.append(mi.getLevel()).append(" ");
-            sb2.append(mi.visibleName).append(" - ");
-            sb2.append(" fileName=").append(mi.fileName).append(" level=").append(mi.getLevel());
-            sb2.append(" prefix=" + mi.getVisibleNameWithoutFileName());
-            sb2.append(" fn=" + mi.fileName);
-            sb2.append("<br>");
-        }
-        sb.append(sb2.toString());
-
-        sb.append("<br><br><br><br>\n\n\n\n");
+  
 
         {
             sb.append("<ul>");
             for (MenuItem mi : menuItems) {
                 sb.append("<li><a href=\"").append(mi.doubleDotsSlash).append(mi.visibleName);
-                sb.append("\">").append(mi.visibleName).append(" :: ").append(mi.getLabel()).append("</a></li>");
+                sb.append("\">").append(mi.visibleName).append(" :: ")
+                        .append(mi.getLabel()).append("|").append(mi.toString()).append("-").append(mi.getLevel()).append("</a></li>"
+                                + "\n");
             }
             sb.append("<ul>");
         }
