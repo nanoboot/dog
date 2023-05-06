@@ -70,12 +70,12 @@ public class MenuItem implements Comparable<MenuItem> {
 
     public int getLevelForMenu() {
         if (getLevel() == 1 && fileName.equals("index.adoc")) {
-            return 0;
+            return 1;
         }
         if (getLevel() > 1 && fileName.equals("index.adoc")) {
-            return getLevel() - 1 -1;
+            return getLevel() - 1;
         }
-        return getLevel() -1;
+        return getLevel();
     }
 
     public String createTabs(int count) {

@@ -271,33 +271,30 @@ public class Main {
         }
         Collections.sort(menuItems);
 
+        StringBuilder tempAsciidocForMenu = new StringBuilder();
         {
-            sb.append("<ul>");
-            MenuItem lastMenuItem = null;
+            //tempAsciidocForMenu.append("<pre>");
             for (MenuItem currentMenuItem : menuItems) {
-                if (lastMenuItem == null) {
-                    lastMenuItem = currentMenuItem;
-                }
-//                if (currentMenuItem.getLevelForMenu() < lastMenuItem.getLevelForMenu()) {
-//                    for (int i = 1; i <= lastMenuItem.getLevelForMenu() - currentMenuItem.getLevelForMenu(); i++) {
-//                        sb.append("<ul>\n");
-//                    }
-//                }
-//                if (currentMenuItem.getLevelForMenu() > lastMenuItem.getLevelForMenu()) {
-//                    for (int i = 1; i <= currentMenuItem.getLevelForMenu() - lastMenuItem.getLevelForMenu(); i++) {
-//                        sb.append("</ul>\n");
-//                    }
-//                }
-                sb.append("<li><a href=\"").append(currentMenuItem.doubleDotsSlash).append(currentMenuItem.visibleName);
-                sb.append("\">")
-                        .append(currentMenuItem.createTabs(currentMenuItem.getLevelForMenu())).append(currentMenuItem.getLabel()).append("&nbsp;&nbsp;&nbsp;&nbsp;").append(currentMenuItem.toString()).append("-").append(currentMenuItem.getLevel()).append("</a></li>"
-                        + "\n");
+ 
+                tempAsciidocForMenu.append(currentMenuItem.createTabs(currentMenuItem.getLevelForMenu()));
+                tempAsciidocForMenu
+                        .append("link:")
+                        .append(currentMenuItem.doubleDotsSlash)
+                        .append(currentMenuItem.visibleName)
+                        .append("[")
+                        .append(currentMenuItem.getLabel())
+                        .append("]").append("\n");
 
-                lastMenuItem = currentMenuItem;
             }
-            sb.append("<ul>");
+            //tempAsciidocForMenu.append("</pre>");
+            
         }
 
+        Asciidoctor asciidoctor = create();
+
+        String tempAsciidocForMenuProcessed = asciidoctor
+                .convert(tempAsciidocForMenu.toString(), new HashMap<String, Object>());
+        sb.append(tempAsciidocForMenuProcessed);
         sb.append("<br><br><br><br>\n\n\n\n");
 
         return sb.toString();
