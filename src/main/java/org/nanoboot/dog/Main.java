@@ -273,7 +273,7 @@ public class Main {
 
         StringBuilder tempAsciidocForMenu = new StringBuilder();
         {
-            //tempAsciidocForMenu.append("<pre>");
+            int chapterNumber = 1;
             for (MenuItem currentMenuItem : menuItems) {
  
                 tempAsciidocForMenu.append(currentMenuItem.createTabs(currentMenuItem.getLevelForMenu()));
@@ -282,19 +282,35 @@ public class Main {
                         .append(currentMenuItem.doubleDotsSlash)
                         .append(currentMenuItem.visibleName)
                         .append("[")
-                        .append(currentMenuItem.getLabel())
+                        .append(currentMenuItem.getLevelForMenu() == 1 ? ((chapterNumber++) + ". ") : "").append(currentMenuItem.getLabel())
                         .append("]").append("\n");
 
             }
-            //tempAsciidocForMenu.append("</pre>");
             
         }
-
+System.out.println(tempAsciidocForMenu);
         Asciidoctor asciidoctor = create();
 
         String tempAsciidocForMenuProcessed = asciidoctor
                 .convert(tempAsciidocForMenu.toString(), new HashMap<String, Object>());
+        tempAsciidocForMenuProcessed = 
+                """
+                <style>
+                div.leftMenu {background: rgb(50, 50, 50);max-width:300px;}
+                div.leftMenu *{font-family: Arial;color:rgb(204, 204, 204);}
+                div.leftMenu ul{list-style: none;padding-left:0;}
+                /*div.leftMenu ul li {padding-top:10px;padding-bottom:10px;margin-top:0px;margin-bottom:0px;}*/
+                div.leftMenu ul li ul li {margin-left:15px;padding-left:5px;}
+                div.leftMenu ul li a{text-decoration:none;}
+                div.leftMenu ul li a{display:block;}
+                div.leftMenu ul li a:hover{color:white;}
+                /*div.leftMenu ul li:hover {background: rgb(100,100,100);}*/
+                ul.highlightedUl {color:#FFFF99;/*background: rgb(32, 39, 43);*/}
+                </style>
+                """ +
+                tempAsciidocForMenuProcessed.replace("<div class=\"ulist\">", "<div class=\"leftMenu\">");
         sb.append(tempAsciidocForMenuProcessed);
+        
         sb.append("<br><br><br><br>\n\n\n\n");
 
         return sb.toString();

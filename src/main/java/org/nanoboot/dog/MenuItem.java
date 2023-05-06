@@ -49,7 +49,7 @@ public class MenuItem implements Comparable<MenuItem> {
             if (array.length == 1) {
                 return "Home";
             } else {
-                return array[array.length - 1 - 1];
+                return array[array.length - 1 - 1].replace("_", " ");
             }
         }
         String result = fileName.replace(".adoc", "");;
@@ -57,6 +57,7 @@ public class MenuItem implements Comparable<MenuItem> {
             result = Character.toUpperCase(result.charAt(0))
                     + (result.length() == 1 ? "" : result.substring(1));
         }
+        System.out.println("result=" + result);
         if (result.contains("_")) {
             result = result.replace("_", " ");
         }
@@ -90,18 +91,8 @@ public class MenuItem implements Comparable<MenuItem> {
     @Override
     public int compareTo(MenuItem mi2) {
         MenuItem mi1 = this;
-        boolean sameLevel = mi1.getLevel() == mi2.getLevel();
-        boolean samePath = mi1.getVisibleNameWithoutFileName().equals(mi2.getVisibleNameWithoutFileName());
         boolean mi1IsIndex = mi1.fileName.equals("index.adoc");
         boolean mi2IsIndex = mi2.fileName.equals("index.adoc");
-//                if(sameLevel && samePath) {
-//                    if(mi1IsIndex && !mi2IsIndex) {
-//                        return 1;
-//                    }
-//                    if(!mi1IsIndex && mi2IsIndex) {
-//                        return -1;
-//                    }
-//                }
 
         int comparison5 = mi1.getVisibleNameWithoutFileName().toLowerCase().compareTo(mi2.getVisibleNameWithoutFileName().toLowerCase());
         if (comparison5 != 0) {
