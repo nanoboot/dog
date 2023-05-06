@@ -28,6 +28,7 @@ public class MenuItem implements Comparable<MenuItem> {
     String visibleName;
     String fileName;
     boolean currentMenuItem;
+    boolean hideThisMenuItem = false;
 
     public MenuItem(String doubleDotsSlash, String visibleName, String fileName, boolean currentMenuItem) {
         this.doubleDotsSlash = doubleDotsSlash;

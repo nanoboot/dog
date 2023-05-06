@@ -271,6 +271,20 @@ public class Main {
         }
         Collections.sort(menuItems);
 
+        MenuItem currentMenuItemHighlighted = null;
+        for(MenuItem e:menuItems) {
+            if(e.currentMenuItem) {
+                currentMenuItemHighlighted = e;
+            }
+        }
+        if(currentMenuItemHighlighted != null) {
+            String alwaysShowThisTree = currentMenuItemHighlighted.getVisibleNameWithoutFileName().split("/")[0];
+                    for(MenuItem e:menuItems) {
+            if(e.getLevelForMenu() > 1 && !e.getVisibleNameWithoutFileName().contains(alwaysShowThisTree)) {
+                e.hideThisMenuItem= true;
+            }
+        }
+        }
         StringBuilder tempAsciidocForMenu = new StringBuilder();
         {
             int chapterNumber = 1;
@@ -282,6 +296,8 @@ public class Main {
                         .append(e.doubleDotsSlash)
                         .append(e.visibleName)
                         .append(e.currentMenuItem ? "currentcurrentcurrentcurrentcurrent" : "")
+                        .append(e.hideThisMenuItem ? "hidehidehidehidehide" : "")
+                        
                         .append("[")
                         .append(e.getLevelForMenu() == 1  && !e.getVisibleNameWithoutFileName().equals("aaaaa") ? ((chapterNumber++) + ". ") : "").append(e.getLabel())
                         .append("]").append("\n");
@@ -316,6 +332,8 @@ public class Main {
                 """
                 + tempAsciidocForMenuProcessed.replaceFirst("<div class=\"ulist\">", "<div class=\"leftMenu\">");
         tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("currentcurrentcurrentcurrentcurrent\"", "\" class=\"highlightedMenuItem\"");
+        tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("currentcurrentcurrentcurrentcurrenthidehidehidehidehide\"", "hidehidehidehidehide\" class=\"highlightedMenuItem\"");
+        tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("hidehidehidehidehide\"", "\" style=\"display:none !important;background:yellow;\"");
         sb.append(tempAsciidocForMenuProcessed);
 
         sb.append("<br><br><br><br>\n\n\n\n");
