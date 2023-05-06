@@ -20,4 +20,5 @@
 module dog {
     requires asciidoctorj;
     requires asciidoctorj.api;
+    requires org.apache.commons.io;
 }

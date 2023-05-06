@@ -2,6 +2,8 @@
 
 Dog is a documentation generator.
 
+It is inspired also by: https://docs.utn.se
+
 ## How it works
 
 You created a directory with:

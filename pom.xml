@@ -112,12 +112,18 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>${sqlite-jdbc.version}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
 
-  <dependency>
-    <groupId>org.asciidoctor</groupId>
-    <artifactId>asciidoctorj</artifactId>
-    <version>2.5.8</version> <!--(1)-->
-  </dependency>
+
+        <dependency>
+            <groupId>org.asciidoctor</groupId>
+            <artifactId>asciidoctorj</artifactId>
+            <version>2.5.8</version> <!--(1)-->
+        </dependency>
     </dependencies>
 
 </project>

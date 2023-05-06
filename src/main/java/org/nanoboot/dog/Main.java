@@ -31,11 +31,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import static org.asciidoctor.Asciidoctor.Factory.create;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import org.apache.commons.io.FileUtils;
 import org.asciidoctor.Asciidoctor;
 
 /**
@@ -47,10 +50,11 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Dog - documentation generator");
         if (args.length == 0) {
-            throw new DogException("At least one argument is expected, but no argument was provided");
+//            throw new DogException("At least one argument is expected, but no argument was provided");
+            args = new String[]{"gen"};
+
         }
         String arg0 = args[0];
-
         //
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {
@@ -74,11 +78,14 @@ public class Main {
             case "server":
                 executeCommandServer(map);
                 break;
-            case "newsite":
-                executeCommandNewSite(map);
+            case "new":
+                executeCommandNew(map);
                 break;
             case "help":
                 executeCommandHelp(map);
+                break;
+            case "version":
+                executeCommandVersion(map);
                 break;
             case "test":
                 executeCommandTest(map);
@@ -90,16 +97,16 @@ public class Main {
 
     private static void executeCommandGen(Map<String, String> map) {
         if (!map.containsKey("in")) {
-            throw new DogException("Argument in is mandatory, but was not provided.");
+            map.put("in", new File(".").getAbsolutePath());
         }
 
         if (map.get("in") == null) {
             throw new DogException("Argument in must have a value (must not be empty).");
         }
+        if (map.containsKey("out") && !(new File(map.get("out")).exists())) {
+            throw new DogException("Argument out must be an existing directory.");
+        }
 
-//      if(!map.containsKey("out")) {
-//          throw new DogException("Argument out is mandatory, but was not provided.");
-//      }
         File inDir = new File(map.get("in"));
         if (!inDir.exists()) {
             throw new DogException("Argument in must be an existing directory, but that directory does not exist.");
@@ -108,19 +115,20 @@ public class Main {
         if (!dogConfFile.exists()) {
             throw new DogException("File dog.conf was not found.");
         }
-        File outDir = (!map.containsKey("out") || map.get("out") == null) ? new File(inDir, "out") : new File(map.get("out"));
+        File generatedDir = new File((map.containsKey("out") ? new File(map.get("out")) : inDir), "generated");
 
-        if (outDir.getName().equals("out") && !outDir.exists()) {
-            outDir.mkdir();
+        if (generatedDir.exists()) {
+            try {
+                FileUtils.deleteDirectory(generatedDir);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                throw new DogException("Deleting generated directory failed.", ex);
+            }
         }
-        if (!outDir.exists()) {
+        generatedDir.mkdir();
+        if (!generatedDir.exists()) {
             throw new DogException("Argument out must be an existing directory, but that directory does not exist.");
         }
-        File generatedDir = new File(outDir, "generated." + new SimpleDateFormat("yyyyMMdd.hhmmss").format(new Date()));
-        generatedDir.mkdir();
-
-        File lastFile = new File(outDir, "last.txt");
-        writeTextToFile(generatedDir.getName(), lastFile);
 
         //
         Properties dogConfProperties = null;
@@ -134,21 +142,87 @@ public class Main {
         }
         writeTextToFile(readTextFromResourceFile("/dog.css"), new File(generatedDir, "dog.css"));
         File contentDir = new File(inDir, "content");
-        processContentDir(contentDir, generatedDir);
+        processContentDir(contentDir, generatedDir, contentDir);
     }
 
-    private static void processContentDir(File contentDir, File generatedDir) {
+    private static void processContentDir(File contentDir, File generatedDir, File rootContentDir) {
         for (File inFile : contentDir.listFiles()) {
             if (inFile.isFile()) {
                 if (inFile.getName().endsWith(".adoc")) {
 
                     Asciidoctor asciidoctor = create();
+                    String asciidocText = readTextFromFile(inFile);
 
-                    String htmlOutput = asciidoctor
-                            .convert(readTextToFile(inFile), new HashMap<String, Object>());
+                    String asciidocCompiled = asciidoctor
+                            .convert(asciidocText, new HashMap<String, Object>());
+                    String pathToRoot = contentDir.getAbsolutePath().replace(rootContentDir.getAbsolutePath(), "");
+                    System.out.println("pathToRoot=(" + pathToRoot + ")");
+                    if (!pathToRoot.trim().isEmpty()) {
+                        int count = 0;
+                        for (char ch : pathToRoot.toCharArray()) {
+                            if (ch == '/') {
+                                count++;
+                            }
+                        }
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 1; i <= count; i++) {
+                            sb.append("../");
+                        }
+                        pathToRoot = sb.toString();
+
+                    }
+
+                    String start
+                            = """
+                            <!DOCTYPE html>
+                            <html lang="en">
+                            <head>
+                            <meta charset="UTF-8">
+                            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <meta name="generator" content="Asciidoctor 2.0.16">
+                            <title>
+                            """
+                            + createHumanName(inFile)
+                            + """
+                            </title>
+                            <link rel="stylesheet" href="
+                              """
+                            + pathToRoot
+                            + """
+                    dog.css">
+                            </head>
+                            <body class="article">
+                            <div id="header">
+                              """
+                            + createNavigation(inFile, rootContentDir)
+                            + "<h1>"
+                            + createHumanName(inFile)
+                            + """
+                            </h1>
+                            </div>
+                            <div id="content">
+                    """;
+                    String end
+                            = """
+                                  </div>
+                                  <div id="footer">
+                                     <div id="footer-text">
+                                        Last updated """
+                            + " "
+                            + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ").format(new Date()))
+                            + """
+                                     </div>
+                                  </div>
+                               </body>
+                            </html>
+                            """;
+                    String htmlOutput = start + createMenu(rootContentDir) + asciidocCompiled + end;
                     File htmlFile = new File(generatedDir, inFile.getName().replace(".adoc", ".html"));
                     writeTextToFile(htmlOutput, htmlFile);
-
+                    System.out.println("Going to copy (" + htmlOutput.getBytes().length + " bytes)adoc file:" + inFile.getAbsolutePath());
+                    System.out.println("from:" + inFile.getAbsolutePath());
+                    System.out.println("to:" + htmlFile.getAbsolutePath());
                 } else {
                     copyFile(inFile, generatedDir);
                 }
@@ -157,9 +231,106 @@ public class Main {
             if (inFile.isDirectory()) {
                 File generatedDir2 = new File(generatedDir, inFile.getName());
                 generatedDir2.mkdir();
-                processContentDir(inFile, generatedDir2);
+                processContentDir(inFile, generatedDir2, rootContentDir);
             }
         }
+    }
+
+    private static String createMenu(File rootContentDir) {
+        List<File> files = listFilesInDir(rootContentDir, new ArrayList<>());
+        StringBuilder sb = new StringBuilder();
+        for (File f : files) {
+            if (f.isDirectory()) {
+                continue;
+            }
+            String path = f.getAbsolutePath();
+            if (path.endsWith(".adoc")) {
+                path = path.replace(".adoc", ".html");
+            }
+            path = path.replace("content", "generated");
+            sb
+                    .append("<a href=\"file:///")
+                    .append(path)
+                    .append("\">")
+                    .append(path)
+                    .append("</a>")
+                    .append("<br>");
+        }
+        return sb.toString();
+    }
+
+    private static String createNavigation(File adocFile, File rootContentDir) {
+        List<File> files = new ArrayList<>();
+        File currentFile = adocFile;
+        while (!currentFile.getAbsolutePath().equals(rootContentDir.getAbsolutePath())) {
+
+            if (currentFile.getName().equals("content")) {
+                continue;
+            }
+            files.add(currentFile);
+            currentFile = currentFile.getParentFile();
+        }
+        StringBuilder sb = new StringBuilder("<a href=\"" + createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
+        if (files.size() > 1) {
+            sb.append(" > ");
+        }
+        for (int i = (files.size() - 1); i >= 0; i--) {
+            File file = files.get(i);
+            if (file.getName().equals("index.adoc")) {
+                continue;
+            }
+            sb
+                    .append("<a href=\"")
+                    .append(createDoubleDotSlash(files.size() - i - (i > 0 ? 1 : 2)))
+                    //.append(file.getName().replace(".adoc", ""))
+                    .append(i == 0 ? file.getName().replace(".adoc", "") : "index")
+                    .append(".html\">")
+                    .append(createHumanName(file))
+                    .append("</a>");
+            if (i > 0) {
+                sb.append(" > ");
+            }
+
+        }
+        String result = sb.toString();
+        if (result.endsWith(" > ")) {
+            result = result.substring(0, result.length() - 3);
+        }
+        return result;
+    }
+
+    private static List<File> listFilesInDir(File dir, List<File> files) {
+        files.add(dir);
+        for (File f : dir.listFiles()) {
+            if (f.isDirectory()) {
+                listFilesInDir(f, files);
+            } else {
+                files.add(f);
+            }
+        }
+        return files;
+    }
+
+    private static String createDoubleDotSlash(int times) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= times; i++) {
+            sb.append("../");
+        }
+        String result = sb.toString();
+        return result;//.substring(0, result.length() - 1);
+    }
+
+    private static String createHumanName(File inFile) {
+        System.out.println("calling createHumanName for inFile=" + inFile.getName());
+        String result = inFile.getName();
+        if (result.endsWith(".adoc")) {
+            result = result.substring(0, inFile.getName().length() - 5);
+        }
+        result = result.replace("_", " ");
+        if (Character.isLetter(result.charAt(0))) {
+            result = Character.toUpperCase(result.charAt(0)) + result.substring(1);
+        }
+        return result;
     }
 
     private static void copyFile(File originalFile, File copiedFile) throws DogException {
@@ -189,13 +360,14 @@ public class Main {
         printWriter.close();
     }
 
-    private static String readTextToFile(File file) {
+    private static String readTextFromFile(File file) {
         try {
             return new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
         } catch (IOException ex) {
             throw new DogException("Reading file failed: " + file.getName(), ex);
         }
     }
+
     private static String readTextFromResourceFile(String fileName) {
         try {
             Class clazz = Main.class;
@@ -224,7 +396,7 @@ public class Main {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
-    private static void executeCommandNewSite(Map<String, String> map) {
+    private static void executeCommandNew(Map<String, String> map) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
@@ -239,7 +411,7 @@ public class Main {
                        = The Dangers of Wolpertingers
                        :url-wolpertinger: https://en.wikipedia.org/wiki/Wolpertinger
                        :linkcss:
-                       :stylesheet: nanoboot-asciidoctor.css
+                       :stylesheet: dog.css
                        
                        
                        
@@ -491,6 +663,10 @@ public class Main {
                 .convert(input, new HashMap<String, Object>());
         System.out.println(output);
 
+    }
+
+    private static void executeCommandVersion(Map<String, String> map) {
+        System.out.println("Dog 0.0.0-SNAPSHOT");
     }
 
 }
