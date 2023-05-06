@@ -267,22 +267,23 @@ public class Main {
 
             String doubleDotsSlash = createDoubleDotSlash(countOfStepsToBaseDirectory);
 
-            menuItems.add(new MenuItem(doubleDotsSlash, visibleName, f.getName()));
+            menuItems.add(new MenuItem(doubleDotsSlash, visibleName, f.getName(), inFile.getAbsolutePath().equals(f.getAbsolutePath())));
         }
         Collections.sort(menuItems);
 
         StringBuilder tempAsciidocForMenu = new StringBuilder();
         {
             int chapterNumber = 1;
-            for (MenuItem currentMenuItem : menuItems) {
+            for (MenuItem e : menuItems) {
  
-                tempAsciidocForMenu.append(currentMenuItem.createTabs(currentMenuItem.getLevelForMenu()));
+                tempAsciidocForMenu.append(e.createTabs(e.getLevelForMenu()));
                 tempAsciidocForMenu
                         .append("link:")
-                        .append(currentMenuItem.doubleDotsSlash)
-                        .append(currentMenuItem.visibleName)
+                        .append(e.doubleDotsSlash)
+                        .append(e.visibleName)
+                        .append(e.currentMenuItem ? "currentcurrentcurrentcurrentcurrent" : "")
                         .append("[")
-                        .append(currentMenuItem.getLevelForMenu() == 1 ? ((chapterNumber++) + ". ") : "").append(currentMenuItem.getLabel())
+                        .append(e.getLevelForMenu() == 1 ? ((chapterNumber++) + ". ") : "").append(e.getLabel())
                         .append("]").append("\n");
 
             }
@@ -296,19 +297,24 @@ System.out.println(tempAsciidocForMenu);
         tempAsciidocForMenuProcessed = 
                 """
                 <style>
-                div.leftMenu {background: rgb(50, 50, 50);max-width:300px;}
+                div.leftMenu {background: rgb(50, 50, 50);max-width:300px;padding-top:10px; padding-bottom:10px;}
                 div.leftMenu *{font-family: Arial;color:rgb(204, 204, 204);}
                 div.leftMenu ul{list-style: none;padding-left:0;}
-                /*div.leftMenu ul li {padding-top:10px;padding-bottom:10px;margin-top:0px;margin-bottom:0px;}*/
-                div.leftMenu ul li ul li {margin-left:15px;padding-left:5px;}
-                div.leftMenu ul li a{text-decoration:none;}
-                div.leftMenu ul li a{display:block;}
+                /*div.leftMenu ul li {margin-top:0px !important;margin-bottom:0px !important;padding-left: 10px;}*/
+                div.leftMenu ul li {margin-top:0px !important;margin-bottom:0px !important;padding-top:0px;padding-bottom:0px;padding-left:0px;}
+                div.leftMenu ul li ul li {margin-left:10px;padding-left:15px;}
+                div.leftMenu ul li a{text-decoration:none;display:block;padding: 5px 10px 5px 15px;}
                 div.leftMenu ul li a:hover{color:white;}
-                /*div.leftMenu ul li:hover {background: rgb(100,100,100);}*/
-                ul.highlightedUl {color:#FFFF99;/*background: rgb(32, 39, 43);*/}
+                /*div.leftMenu ul li:hover {background: rgb(70,70,70);}*/
+                .highlightedMenuItem {/*color:#FFFF99 !important;*/font-weight:bold;background: rgb(32, 39, 43);color:rgb(70,70,70) !important;background:white;}
+                div.leftMenu .highlightedMenuItem:hover{color:rgb(70,70,70); !important;}
+                div.leftMenu>ul {margin-left:0 !important;}
+                div.leftMenu p{margin-bottom:0 !important;padding:0;}
+                
                 </style>
                 """ +
-                tempAsciidocForMenuProcessed.replace("<div class=\"ulist\">", "<div class=\"leftMenu\">");
+                tempAsciidocForMenuProcessed.replaceFirst("<div class=\"ulist\">", "<div class=\"leftMenu\">");
+        tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("currentcurrentcurrentcurrentcurrent\"", "\" class=\"highlightedMenuItem\"");
         sb.append(tempAsciidocForMenuProcessed);
         
         sb.append("<br><br><br><br>\n\n\n\n");

@@ -27,11 +27,13 @@ public class MenuItem implements Comparable<MenuItem> {
     String doubleDotsSlash;
     String visibleName;
     String fileName;
+    boolean currentMenuItem;
 
-    public MenuItem(String doubleDotsSlash, String visibleName, String fileName) {
+    public MenuItem(String doubleDotsSlash, String visibleName, String fileName, boolean currentMenuItem) {
         this.doubleDotsSlash = doubleDotsSlash;
         this.visibleName = visibleName;
         this.fileName = fileName;
+        this.currentMenuItem = currentMenuItem;
     }
 
     public String getVisibleNameWithoutFileName() {
