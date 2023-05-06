@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
 package org.nanoboot.dog;
 
 import java.io.BufferedReader;
@@ -250,7 +249,7 @@ public class Main {
 
     private static String createMenu(File rootContentDir, File inFile) {
         List<File> files = listFilesInDir(rootContentDir, new ArrayList<>());
-     
+
         List<MenuItem> menuItems = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         int countOfStepsToBaseDirectory = getCountOfSlashOccurences(inFile.getAbsolutePath().split("content")[1]) - 1;
@@ -265,21 +264,36 @@ public class Main {
             path = path.replace("content", "generated");
 
             String visibleName = path.split("/generated/")[1];
-            
+
             String doubleDotsSlash = createDoubleDotSlash(countOfStepsToBaseDirectory);
 
             menuItems.add(new MenuItem(doubleDotsSlash, visibleName, f.getName()));
         }
         Collections.sort(menuItems);
-  
 
         {
             sb.append("<ul>");
-            for (MenuItem mi : menuItems) {
-                sb.append("<li><a href=\"").append(mi.doubleDotsSlash).append(mi.visibleName);
+            MenuItem lastMenuItem = null;
+            for (MenuItem currentMenuItem : menuItems) {
+                if (lastMenuItem == null) {
+                    lastMenuItem = currentMenuItem;
+                }
+//                if (currentMenuItem.getLevelForMenu() < lastMenuItem.getLevelForMenu()) {
+//                    for (int i = 1; i <= lastMenuItem.getLevelForMenu() - currentMenuItem.getLevelForMenu(); i++) {
+//                        sb.append("<ul>\n");
+//                    }
+//                }
+//                if (currentMenuItem.getLevelForMenu() > lastMenuItem.getLevelForMenu()) {
+//                    for (int i = 1; i <= currentMenuItem.getLevelForMenu() - lastMenuItem.getLevelForMenu(); i++) {
+//                        sb.append("</ul>\n");
+//                    }
+//                }
+                sb.append("<li><a href=\"").append(currentMenuItem.doubleDotsSlash).append(currentMenuItem.visibleName);
                 sb.append("\">")
-                        .append(mi.createTabs(mi.getLevelForMenu())).append(mi.getLabel()).append("&nbsp;&nbsp;&nbsp;&nbsp;").append(mi.toString()).append("-").append(mi.getLevel()).append("</a></li>"
-                                + "\n");
+                        .append(currentMenuItem.createTabs(currentMenuItem.getLevelForMenu())).append(currentMenuItem.getLabel()).append("&nbsp;&nbsp;&nbsp;&nbsp;").append(currentMenuItem.toString()).append("-").append(currentMenuItem.getLevel()).append("</a></li>"
+                        + "\n");
+
+                lastMenuItem = currentMenuItem;
             }
             sb.append("<ul>");
         }

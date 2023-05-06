@@ -81,8 +81,9 @@ public class MenuItem implements Comparable<MenuItem> {
     public String createTabs(int count) {
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i <= count; i++) {
-            sb.append("&nbsp;&nbsp;&nbsp;&nbsp;");
+            sb.append("*");
         }
+        sb.append(" ");
         return sb.toString();
     }
 
