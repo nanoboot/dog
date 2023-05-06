@@ -16,6 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
+
 package org.nanoboot.dog;
 
 import java.io.BufferedReader;
@@ -249,91 +250,7 @@ public class Main {
 
     private static String createMenu(File rootContentDir, File inFile) {
         List<File> files = listFilesInDir(rootContentDir, new ArrayList<>());
-        class MenuItem implements Comparable<MenuItem> {
-
-            String doubleDotsSlash;
-            String visibleName;
-            String fileName;
-
-            public MenuItem(String doubleDotsSlash, String visibleName, String fileName) {
-                this.doubleDotsSlash = doubleDotsSlash;
-                this.visibleName = visibleName;
-                this.fileName = fileName;
-            }
-
-            public String getVisibleNameWithoutFileName() {
-                String result = visibleName.replace(fileName.replace(".adoc", ".html"), "");
-                if (result.isBlank()) {
-                    return "aaaaa";
-                } else {
-                    return result;
-                }
-            }
-
-            public String getLabel() {
-                String[] array = visibleName.split("/");
-                if (fileName.equals("index.adoc")) {
-                    if (array.length == 1) {
-                        return "Home";
-                    } else {
-                        return array[array.length - 1 - 1];
-                    }
-                }
-                String result = fileName.replace(".adoc", "");;
-                if (Character.isLetter(result.charAt(0)) && Character.isLowerCase(result.charAt(0))) {
-                    result = Character.toUpperCase(result.charAt(0))
-                            + (result.length() == 1 ? "" : result.substring(1));
-                }
-                if(result.contains("_")) {
-                    result = result.replace("_"," ");
-                }
-                return result;
-
-            }
-
-            public int getLevel() {
-                return getCountOfSlashOccurences(visibleName) + 1;
-            }
-
-            @Override
-            public int compareTo(MenuItem mi2) {
-                MenuItem mi1 = this;
-                boolean sameLevel = mi1.getLevel() == mi2.getLevel();
-                boolean samePath = mi1.getVisibleNameWithoutFileName().equals(mi2.getVisibleNameWithoutFileName());
-                boolean mi1IsIndex = mi1.fileName.equals("index.adoc");
-                boolean mi2IsIndex = mi2.fileName.equals("index.adoc");
-//                if(sameLevel && samePath) {
-//                    if(mi1IsIndex && !mi2IsIndex) {
-//                        return 1;
-//                    }
-//                    if(!mi1IsIndex && mi2IsIndex) {
-//                        return -1;
-//                    }
-//                }
-
-                int comparison5 = mi1.getVisibleNameWithoutFileName().toLowerCase().compareTo(mi2.getVisibleNameWithoutFileName().toLowerCase());
-                if (comparison5 != 0) {
-                    return comparison5;
-                }
-                if (mi1IsIndex) {
-                    return -1;
-                }
-                if (mi2IsIndex) {
-                    return 1;
-                }
-
-                int comparison10 = mi1.fileName.toLowerCase().compareTo(mi2.fileName.toLowerCase());
-
-                return comparison10;
-            }
-
-            @Override
-            public String toString() {
-                return "MenuItem{" + "..=" + doubleDotsSlash + ";visibleName=" + visibleName + ";fileName=" + fileName + '}';
-            }
-
-
-        }
+     
         List<MenuItem> menuItems = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         int countOfStepsToBaseDirectory = getCountOfSlashOccurences(inFile.getAbsolutePath().split("content")[1]) - 1;
@@ -360,8 +277,8 @@ public class Main {
             sb.append("<ul>");
             for (MenuItem mi : menuItems) {
                 sb.append("<li><a href=\"").append(mi.doubleDotsSlash).append(mi.visibleName);
-                sb.append("\">").append(mi.visibleName).append(" :: ")
-                        .append(mi.getLabel()).append("|").append(mi.toString()).append("-").append(mi.getLevel()).append("</a></li>"
+                sb.append("\">")
+                        .append(mi.getLabel()).append("&nbsp;&nbsp;&nbsp;&nbsp;").append(mi.toString()).append("-").append(mi.getLevel()).append("</a></li>"
                                 + "\n");
             }
             sb.append("<ul>");
@@ -372,7 +289,7 @@ public class Main {
         return sb.toString();
     }
 
-    private static int getCountOfSlashOccurences(String string) {
+    public static int getCountOfSlashOccurences(String string) {
         int i = 0;
         for (char ch : string.toCharArray()) {
             if (ch == '/') {
@@ -380,31 +297,6 @@ public class Main {
             }
         }
         return i++;
-    }
-
-    private static String createMenuOrig(File rootContentDir) {
-        List<File> files = listFilesInDir(rootContentDir, new ArrayList<>());
-        StringBuilder sb = new StringBuilder();
-        for (File f : files) {
-            if (f.isDirectory()) {
-                continue;
-            }
-            String path = f.getAbsolutePath();
-            if (path.endsWith(".adoc")) {
-                path = path.replace(".adoc", ".html");
-            }
-            path = path.replace("content", "generated");
-
-            String visibleName = path.split("/generated/")[1];
-            sb
-                    .append("<a href=\"file:///")
-                    .append(path)
-                    .append("\">")
-                    .append(visibleName)
-                    .append("</a>")
-                    .append("<br>");
-        }
-        return sb.toString();
     }
 
     private static String createNavigation(File adocFile, File rootContentDir) {
