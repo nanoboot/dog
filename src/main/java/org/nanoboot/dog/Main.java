@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import static org.asciidoctor.Asciidoctor.Factory.create;
 import java.util.HashMap;
@@ -142,10 +143,10 @@ public class Main {
         }
         writeTextToFile(readTextFromResourceFile("/dog.css"), new File(generatedDir, "dog.css"));
         File contentDir = new File(inDir, "content");
-        processContentDir(contentDir, generatedDir, contentDir);
+        processContentDir(contentDir, generatedDir, contentDir, dogConfProperties);
     }
 
-    private static void processContentDir(File contentDir, File generatedDir, File rootContentDir) {
+    private static void processContentDir(File contentDir, File generatedDir, File rootContentDir, Properties dogConfProperties) {
         for (File inFile : contentDir.listFiles()) {
             if (inFile.isFile()) {
                 if (inFile.getName().endsWith(".adoc")) {
@@ -171,7 +172,7 @@ public class Main {
                         pathToRoot = sb.toString();
 
                     }
-
+                    String titleSeparator = dogConfProperties.containsKey("titleSeparator") ? dogConfProperties.getProperty("titleSeparator") : "::";
                     String start
                             = """
                             <!DOCTYPE html>
@@ -184,6 +185,8 @@ public class Main {
                             <title>
                             """
                             + createHumanName(inFile)
+                            + (dogConfProperties.containsKey("title")
+                            ? (" " + titleSeparator + " " + dogConfProperties.getProperty("title")) : "")
                             + """
                             </title>
                             <link rel="stylesheet" href="
@@ -217,7 +220,15 @@ public class Main {
                                </body>
                             </html>
                             """;
-                    String htmlOutput = start + createMenu(rootContentDir) + asciidocCompiled + end;
+                    String menu
+                            = """
+                                  <div id="menu">
+                                     <div id="footer-text">
+                                        Last updated 
+                                     </div>
+                                  </div>
+                            """;
+                    String htmlOutput = start + createMenu(rootContentDir, inFile) + asciidocCompiled + end;
                     File htmlFile = new File(generatedDir, inFile.getName().replace(".adoc", ".html"));
                     writeTextToFile(htmlOutput, htmlFile);
                     System.out.println("Going to copy (" + htmlOutput.getBytes().length + " bytes)adoc file:" + inFile.getAbsolutePath());
@@ -231,12 +242,128 @@ public class Main {
             if (inFile.isDirectory()) {
                 File generatedDir2 = new File(generatedDir, inFile.getName());
                 generatedDir2.mkdir();
-                processContentDir(inFile, generatedDir2, rootContentDir);
+                processContentDir(inFile, generatedDir2, rootContentDir, dogConfProperties);
             }
         }
     }
 
-    private static String createMenu(File rootContentDir) {
+    private static String createMenu(File rootContentDir, File inFile) {
+        List<File> files = listFilesInDir(rootContentDir, new ArrayList<>());
+        class MenuItem implements Comparable<MenuItem> {
+
+            String htmlElementA;
+            String visibleName;
+            String fileName;
+
+            public MenuItem(String htmlElementA, String visibleName, String fileName) {
+                this.htmlElementA = htmlElementA;
+                this.visibleName = visibleName;
+                this.fileName = fileName;
+            }
+
+            public String getVisibleNameWithoutFileName() {
+                String result = visibleName.replace(fileName.replace(".adoc", ".html"), "");
+                if(result.isBlank()) {
+                    return "aaaaa";
+                } else {
+                    return result;
+                }
+            }
+
+            public int getLevel() {
+                return getCountOfSlashOccurences(visibleName) + 1;
+            }
+
+            @Override
+            public int compareTo(MenuItem mi2) {
+                MenuItem mi1 = this;
+                boolean sameLevel = mi1.getLevel() == mi2.getLevel();
+                boolean samePath = mi1.getVisibleNameWithoutFileName().equals(mi2.getVisibleNameWithoutFileName());
+                boolean mi1IsIndex = mi1.fileName.equals("index.adoc");
+                boolean mi2IsIndex = mi2.fileName.equals("index.adoc");
+//                if(sameLevel && samePath) {
+//                    if(mi1IsIndex && !mi2IsIndex) {
+//                        return 1;
+//                    }
+//                    if(!mi1IsIndex && mi2IsIndex) {
+//                        return -1;
+//                    }
+//                }
+
+                int comparison5 = mi1.getVisibleNameWithoutFileName().toLowerCase().compareTo(mi2.getVisibleNameWithoutFileName().toLowerCase());
+                if(comparison5 != 0) {
+                    return comparison5;
+                }
+                if(mi1IsIndex) {
+                    return -1;
+                }
+                if(mi2IsIndex) {
+                    return 1;
+                }
+                if(mi1.fileName.equals("index.adoc")) {
+                    return -1;
+                }
+                int comparison10 = mi1.fileName.toLowerCase().compareTo(mi2.fileName.toLowerCase());
+                
+                return comparison10;
+            }
+
+            @Override
+            public String toString() {
+                return "MenuItem{" + "htmlElementA=" + htmlElementA + ", visibleName=" + visibleName + ", fileName=" + fileName + '}';
+            }
+
+        }
+        List<MenuItem> menuItems = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        int countOfStepsToBaseDirectory = getCountOfSlashOccurences(inFile.getAbsolutePath().split("content")[1]) - 1;
+        for (File f : files) {
+            if (f.isDirectory()) {
+                continue;
+            }
+            String path = f.getAbsolutePath();
+            if (path.endsWith(".adoc")) {
+                path = path.replace(".adoc", ".html");
+            }
+            path = path.replace("content", "generated");
+
+            String visibleName = path.split("/generated/")[1];
+            StringBuilder htmlElementASB = new StringBuilder();
+            htmlElementASB
+                    .append("<a href=\"")
+                    .append(createDoubleDotSlash(countOfStepsToBaseDirectory)).append(visibleName)
+                    .append("\">")
+                    .append(visibleName)
+                    .append("</a>");
+            String htmlElementA = htmlElementASB.toString();
+            sb.append(htmlElementA).append("<br>");
+            menuItems.add(new MenuItem(htmlElementA, visibleName, f.getName()));
+        }
+        Collections.sort(menuItems);
+        StringBuilder sb2 = new StringBuilder("<hr><hr>");
+        for (MenuItem mi : menuItems) {
+            sb2.append(mi.getLevel()).append(" ");
+            sb2.append(mi.visibleName).append(" - ");
+            sb2.append(" fileName=").append(mi.fileName).append(" level=").append(mi.getLevel());
+            sb2.append(" prefix=" + mi.getVisibleNameWithoutFileName());
+            sb2.append(" fn=" + mi.fileName);
+            sb2.append("<br>");
+        }
+        sb.append(sb2.toString());
+        return sb.toString();
+    }
+
+    private static int getCountOfSlashOccurences(String string) {
+        int i = 0;
+        for (char ch : string.toCharArray()) {
+            if (ch == '/') {
+                i++;
+            }
+        }
+        return i++;
+    }
+
+    private static String createMenuOrig(File rootContentDir) {
         List<File> files = listFilesInDir(rootContentDir, new ArrayList<>());
         StringBuilder sb = new StringBuilder();
         for (File f : files) {
@@ -248,11 +375,13 @@ public class Main {
                 path = path.replace(".adoc", ".html");
             }
             path = path.replace("content", "generated");
+
+            String visibleName = path.split("/generated/")[1];
             sb
                     .append("<a href=\"file:///")
                     .append(path)
                     .append("\">")
-                    .append(path)
+                    .append(visibleName)
                     .append("</a>")
                     .append("<br>");
         }
@@ -271,7 +400,7 @@ public class Main {
             currentFile = currentFile.getParentFile();
         }
         StringBuilder sb = new StringBuilder("<a href=\"" + createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
-        if (files.size() > 1) {
+        if (files.size() > 1 || !currentFile.getName().equals("index.adoc")) {
             sb.append(" > ");
         }
         for (int i = (files.size() - 1); i >= 0; i--) {
