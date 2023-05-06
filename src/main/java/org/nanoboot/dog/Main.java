@@ -203,7 +203,9 @@ public class Main {
                             + createHumanName(inFile)
                             + """
                             </h1>
-                            </div>
+                            </div>"""
+                            + createMenu(rootContentDir, inFile) +
+                            """
                             <div id="content">
                     """;
                     String end
@@ -228,7 +230,7 @@ public class Main {
                                      </div>
                                   </div>
                             """;
-                    String htmlOutput = start + createMenu(rootContentDir, inFile) + asciidocCompiled + end;
+                    String htmlOutput = start  + asciidocCompiled + end;
                     File htmlFile = new File(generatedDir, inFile.getName().replace(".adoc", ".html"));
                     writeTextToFile(htmlOutput, htmlFile);
                     System.out.println("Going to copy (" + htmlOutput.getBytes().length + " bytes)adoc file:" + inFile.getAbsolutePath());
@@ -328,6 +330,8 @@ public class Main {
                 div.leftMenu p{margin-bottom:0 !important;padding:0;}
                 .uulist ul li{display:none;}
                 .uhighlightedMenuItem *{display:block;}
+                div.leftMenu {height: 100%;width: 300px;float:left;}
+                  
                 </style>
                 """
                 + tempAsciidocForMenuProcessed.replaceFirst("<div class=\"ulist\">", "<div class=\"leftMenu\">");
