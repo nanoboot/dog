@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
 package org.nanoboot.dog;
 
 /**
@@ -67,6 +66,24 @@ public class MenuItem implements Comparable<MenuItem> {
 
     public int getLevel() {
         return Main.getCountOfSlashOccurences(visibleName) + 1;
+    }
+
+    public int getLevelForMenu() {
+        if (getLevel() == 1 && fileName.equals("index.adoc")) {
+            return 0;
+        }
+        if (getLevel() > 1 && fileName.equals("index.adoc")) {
+            return getLevel() - 1 -1;
+        }
+        return getLevel() -1;
+    }
+
+    public String createTabs(int count) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= count; i++) {
+            sb.append("&nbsp;&nbsp;&nbsp;&nbsp;");
+        }
+        return sb.toString();
     }
 
     @Override

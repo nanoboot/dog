@@ -265,7 +265,7 @@ public class Main {
             path = path.replace("content", "generated");
 
             String visibleName = path.split("/generated/")[1];
-            StringBuilder htmlElementASB = new StringBuilder();
+            
             String doubleDotsSlash = createDoubleDotSlash(countOfStepsToBaseDirectory);
 
             menuItems.add(new MenuItem(doubleDotsSlash, visibleName, f.getName()));
@@ -278,7 +278,7 @@ public class Main {
             for (MenuItem mi : menuItems) {
                 sb.append("<li><a href=\"").append(mi.doubleDotsSlash).append(mi.visibleName);
                 sb.append("\">")
-                        .append(mi.getLabel()).append("&nbsp;&nbsp;&nbsp;&nbsp;").append(mi.toString()).append("-").append(mi.getLevel()).append("</a></li>"
+                        .append(mi.createTabs(mi.getLevelForMenu())).append(mi.getLabel()).append("&nbsp;&nbsp;&nbsp;&nbsp;").append(mi.toString()).append("-").append(mi.getLevel()).append("</a></li>"
                                 + "\n");
             }
             sb.append("<ul>");
