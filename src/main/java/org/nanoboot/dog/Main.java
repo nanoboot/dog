@@ -275,7 +275,7 @@ public class Main {
         {
             int chapterNumber = 1;
             for (MenuItem e : menuItems) {
- 
+
                 tempAsciidocForMenu.append(e.createTabs(e.getLevelForMenu()));
                 tempAsciidocForMenu
                         .append("link:")
@@ -283,19 +283,19 @@ public class Main {
                         .append(e.visibleName)
                         .append(e.currentMenuItem ? "currentcurrentcurrentcurrentcurrent" : "")
                         .append("[")
-                        .append(e.getLevelForMenu() == 1 ? ((chapterNumber++) + ". ") : "").append(e.getLabel())
+                        .append(e.getLevelForMenu() == 1  && !e.getVisibleNameWithoutFileName().equals("aaaaa") ? ((chapterNumber++) + ". ") : "").append(e.getLabel())
                         .append("]").append("\n");
 
             }
-            
+
         }
-System.out.println(tempAsciidocForMenu);
+        System.out.println(tempAsciidocForMenu);
         Asciidoctor asciidoctor = create();
 
         String tempAsciidocForMenuProcessed = asciidoctor
                 .convert(tempAsciidocForMenu.toString(), new HashMap<String, Object>());
-        tempAsciidocForMenuProcessed = 
-                """
+        tempAsciidocForMenuProcessed
+                = """
                 <style>
                 div.leftMenu {background: rgb(50, 50, 50);max-width:300px;padding-top:10px; padding-bottom:10px;}
                 div.leftMenu *{font-family: Arial;color:rgb(204, 204, 204);}
@@ -310,13 +310,14 @@ System.out.println(tempAsciidocForMenu);
                 div.leftMenu .highlightedMenuItem:hover{color:rgb(70,70,70); !important;}
                 div.leftMenu>ul {margin-left:0 !important;}
                 div.leftMenu p{margin-bottom:0 !important;padding:0;}
-                
+                .uulist ul li{display:none;}
+                .uhighlightedMenuItem *{display:block;}
                 </style>
-                """ +
-                tempAsciidocForMenuProcessed.replaceFirst("<div class=\"ulist\">", "<div class=\"leftMenu\">");
+                """
+                + tempAsciidocForMenuProcessed.replaceFirst("<div class=\"ulist\">", "<div class=\"leftMenu\">");
         tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("currentcurrentcurrentcurrentcurrent\"", "\" class=\"highlightedMenuItem\"");
         sb.append(tempAsciidocForMenuProcessed);
-        
+
         sb.append("<br><br><br><br>\n\n\n\n");
 
         return sb.toString();
