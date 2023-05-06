@@ -362,7 +362,7 @@ public class Main {
             files.add(currentFile);
             currentFile = currentFile.getParentFile();
         }
-        StringBuilder sb = new StringBuilder("<a href=\"" + createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
+        StringBuilder sb = new StringBuilder("<div class=\"navigation\" style=\"margin-top:20px;\"><a href=\"" + createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
         if (files.size() > 1 || !currentFile.getName().equals("index.adoc")) {
             sb.append(" > ");
         }
@@ -384,6 +384,7 @@ public class Main {
             }
 
         }
+        sb.append("</div>");
         String result = sb.toString();
         if (result.endsWith(" > ")) {
             result = result.substring(0, result.length() - 3);
