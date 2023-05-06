@@ -252,22 +252,45 @@ public class Main {
         class MenuItem implements Comparable<MenuItem> {
 
             String htmlElementA;
+            String doubleDotsSlash;
             String visibleName;
             String fileName;
 
-            public MenuItem(String htmlElementA, String visibleName, String fileName) {
+            public MenuItem(String htmlElementA, String doubleDotsSlash, String visibleName, String fileName) {
                 this.htmlElementA = htmlElementA;
+                this.doubleDotsSlash = doubleDotsSlash;
                 this.visibleName = visibleName;
                 this.fileName = fileName;
             }
 
             public String getVisibleNameWithoutFileName() {
                 String result = visibleName.replace(fileName.replace(".adoc", ".html"), "");
-                if(result.isBlank()) {
+                if (result.isBlank()) {
                     return "aaaaa";
                 } else {
                     return result;
                 }
+            }
+
+            public String getLabel() {
+                String[] array = visibleName.split("/");
+                if (fileName.equals("index.adoc")) {
+                    if (array.length == 1) {
+                        return "Home";
+                    } else {
+                        return array[array.length - 1 - 1];
+                    }
+                }
+                String result = fileName.replace(".adoc", "");;
+                if (Character.isLetter(result.charAt(0)) && Character.isLowerCase(result.charAt(0))) {
+                    result = Character.toUpperCase(result.charAt(0))
+                            + (result.length() == 1 ? "" : result.substring(1));
+                }
+                if(result.contains("_")) {
+                    result = result.replace("_"," ");
+                }
+                return result;
+
             }
 
             public int getLevel() {
@@ -291,20 +314,18 @@ public class Main {
 //                }
 
                 int comparison5 = mi1.getVisibleNameWithoutFileName().toLowerCase().compareTo(mi2.getVisibleNameWithoutFileName().toLowerCase());
-                if(comparison5 != 0) {
+                if (comparison5 != 0) {
                     return comparison5;
                 }
-                if(mi1IsIndex) {
+                if (mi1IsIndex) {
                     return -1;
                 }
-                if(mi2IsIndex) {
+                if (mi2IsIndex) {
                     return 1;
                 }
-                if(mi1.fileName.equals("index.adoc")) {
-                    return -1;
-                }
+
                 int comparison10 = mi1.fileName.toLowerCase().compareTo(mi2.fileName.toLowerCase());
-                
+
                 return comparison10;
             }
 
@@ -329,15 +350,16 @@ public class Main {
 
             String visibleName = path.split("/generated/")[1];
             StringBuilder htmlElementASB = new StringBuilder();
+            String doubleDotsSlash = createDoubleDotSlash(countOfStepsToBaseDirectory);
             htmlElementASB
                     .append("<a href=\"")
-                    .append(createDoubleDotSlash(countOfStepsToBaseDirectory)).append(visibleName)
+                    .append(doubleDotsSlash).append(visibleName)
                     .append("\">")
                     .append(visibleName)
                     .append("</a>");
             String htmlElementA = htmlElementASB.toString();
             sb.append(htmlElementA).append("<br>");
-            menuItems.add(new MenuItem(htmlElementA, visibleName, f.getName()));
+            menuItems.add(new MenuItem(htmlElementA, doubleDotsSlash, visibleName, f.getName()));
         }
         Collections.sort(menuItems);
         StringBuilder sb2 = new StringBuilder("<hr><hr>");
@@ -350,6 +372,20 @@ public class Main {
             sb2.append("<br>");
         }
         sb.append(sb2.toString());
+
+        sb.append("<br><br><br><br>\n\n\n\n");
+
+        {
+            sb.append("<ul>");
+            for (MenuItem mi : menuItems) {
+                sb.append("<li><a href=\"").append(mi.doubleDotsSlash).append(mi.visibleName);
+                sb.append("\">").append(mi.visibleName).append(" :: ").append(mi.getLabel()).append("</a></li>");
+            }
+            sb.append("<ul>");
+        }
+
+        sb.append("<br><br><br><br>\n\n\n\n");
+
         return sb.toString();
     }
 
