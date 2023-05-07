@@ -431,4 +431,5 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"); /* Using a url */
 
-
+#content{margin-top:0.25em !important;}
+h2{margin-top:10px !important;}

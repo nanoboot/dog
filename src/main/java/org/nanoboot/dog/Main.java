@@ -188,7 +188,7 @@ public class Main {
                             <meta name="generator" content="Asciidoctor 2.0.16">
                             <title>
                             """
-                            + createHumanName(inFile)
+                            + createHumanName(inFile, dogConfProperties)
                             + (dogConfProperties.containsKey("title")
                             ? (" " + titleSeparator + " " + dogConfProperties.getProperty("title")) : "")
                             + """
@@ -207,9 +207,9 @@ public class Main {
                             """
                             <div id="header">
                               """
-                            + createNavigation(inFile, rootContentDir)
+                            + createNavigation(inFile, rootContentDir, dogConfProperties)
                             + "<h1>"
-                            + createHumanName(inFile)
+                            + createHumanName(inFile, dogConfProperties)
                             + """
                             </h1>
                             </div>"""
@@ -374,7 +374,7 @@ public class Main {
         tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("hidehidehidehidehide\"", "\" style=\"display:none !important;background:yellow;\"");
         sb.append(tempAsciidocForMenuProcessed);
 
-        sb.append("<br><br><br><br>\n\n\n\n");
+        sb.append("<br>\n");
 
         return sb.toString();
     }
@@ -389,7 +389,7 @@ public class Main {
         return i++;
     }
 
-    private static String createNavigation(File adocFile, File rootContentDir) {
+    private static String createNavigation(File adocFile, File rootContentDir, Properties dogConfProperties) {
         List<File> files = new ArrayList<>();
         File currentFile = adocFile;
         while (!currentFile.getAbsolutePath().equals(rootContentDir.getAbsolutePath())) {
@@ -421,7 +421,7 @@ public class Main {
                     //.append(file.getName().replace(".adoc", ""))
                     .append(i == 0 ? (file.getName().replace(".adoc", "")) : "index")
                     .append(".html\">")
-                    .append(createHumanName(file))
+                    .append(createHumanName(file, dogConfProperties))
                     .append("</a>\n");
             //if (i > 1) {
                 sb.append(" > ");
@@ -458,7 +458,7 @@ public class Main {
         return result;//.substring(0, result.length() - 1);
     }
 
-    private static String createHumanName(File inFile) {
+    private static String createHumanName(File inFile, Properties dogConfProperties) {
         System.out.println("calling createHumanName for inFile=" + inFile.getName());
         String result = inFile.getName();
         if (result.endsWith(".adoc")) {
@@ -471,9 +471,10 @@ public class Main {
         if(result.equals("Index")) {
             File parentFile = inFile.getParentFile();
             if(parentFile.getName().equals("content")) {
-                return "Home";
+                String frontPageName = dogConfProperties.getProperty("frontPageName", "");
+                return frontPageName.isBlank() ? "Home" : frontPageName;
             }
-            return createHumanName(parentFile);
+            return createHumanName(parentFile, dogConfProperties);
         }
         return result;
     }
