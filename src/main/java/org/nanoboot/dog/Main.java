@@ -147,6 +147,9 @@ public class Main {
     }
 
     private static void processContentDir(File contentDir, File generatedDir, File rootContentDir, Properties dogConfProperties) {
+        File templateDir = new File(rootContentDir.getParentFile().getAbsolutePath() + "/templates");
+        String headerTemplate = readTextFromFile(new File(templateDir, "header.html"));
+        String footerTemplate = readTextFromFile(new File(templateDir, "footer.html"));
         for (File inFile : contentDir.listFiles()) {
             if (inFile.isFile()) {
                 if (inFile.getName().endsWith(".adoc")) {
@@ -173,6 +176,7 @@ public class Main {
 
                     }
                     String titleSeparator = dogConfProperties.containsKey("titleSeparator") ? dogConfProperties.getProperty("titleSeparator") : "::";
+                    
                     String start
                             = """
                             <!DOCTYPE html>
@@ -196,6 +200,11 @@ public class Main {
                     dog.css">
                             </head>
                             <body class="article">
+                              """
+                            +
+                            headerTemplate
+                            +
+                            """
                             <div id="header">
                               """
                             + createNavigation(inFile, rootContentDir)
@@ -216,6 +225,7 @@ public class Main {
                                         Last updated """
                             + " "
                             + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ").format(new Date()))
+                            + "<br>" + footerTemplate
                             + """
                                      </div>
                                   </div>
@@ -228,6 +238,10 @@ public class Main {
                                      <div id="footer-text">
                                         Last updated 
                                      </div>
+                              """
+                            
+                            +
+                            """
                                   </div>
                             """;
                     List<String> dirs = new ArrayList<>();
@@ -350,6 +364,7 @@ public class Main {
                 .uhighlightedMenuItem *{display:block;}
                   
                 div.leftMenu {height: 100%;width: 300px;float:left;}
+                #content{padding-left:40px;}
                   
                 </style>
                 """
@@ -484,6 +499,9 @@ public class Main {
     }
 
     private static String readTextFromFile(File file) {
+        if(!file.exists()) {
+            return "";
+        }
         try {
             return new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
         } catch (IOException ex) {
