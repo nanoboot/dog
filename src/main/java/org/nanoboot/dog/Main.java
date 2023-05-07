@@ -363,7 +363,7 @@ public class Main {
                 .uulist ul li{display:none;}
                 .uhighlightedMenuItem *{display:block;}
                   
-                div.leftMenu {height: 100%;width: 300px;float:left;}
+                div.leftMenu {height: 100%;min-height: 400px;width: 300px;float:left;}
                 #content{padding-left:40px;}
                   
                 </style>
@@ -434,7 +434,7 @@ public class Main {
             result = result.substring(0, result.length() - 9);
             result = result + "</div>";
         }
-        return result;
+        return result + "<hr>";
     }
 
     private static List<File> listFilesInDir(File dir, List<File> files) {
@@ -467,6 +467,13 @@ public class Main {
         result = result.replace("_", " ");
         if (Character.isLetter(result.charAt(0))) {
             result = Character.toUpperCase(result.charAt(0)) + result.substring(1);
+        }
+        if(result.equals("Index")) {
+            File parentFile = inFile.getParentFile();
+            if(parentFile.getName().equals("content")) {
+                return "Home";
+            }
+            return createHumanName(parentFile);
         }
         return result;
     }
