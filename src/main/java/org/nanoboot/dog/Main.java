@@ -204,8 +204,8 @@ public class Main {
                             + """
                             </h1>
                             </div>"""
-                            + createMenu(rootContentDir, inFile) +
-                            """
+                            + createMenu(rootContentDir, inFile)
+                            + """
                             <div id="content">
                     """;
                     String end
@@ -230,7 +230,24 @@ public class Main {
                                      </div>
                                   </div>
                             """;
-                    String htmlOutput = start  + asciidocCompiled + end;
+                    List<String> dirs = new ArrayList<>();
+                    File currentFile = inFile;
+                    String rootContentDirPath = rootContentDir.getAbsolutePath();
+                    while (!currentFile.getAbsolutePath().equals(rootContentDirPath)) {
+                        dirs.add(currentFile.getName());
+                        currentFile = currentFile.getParentFile();
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = dirs.size() - 1; i >= 0; i--) {
+                        String dir = dirs.get(i);
+                        sb.append(dir);
+                        if (i > 0) {
+                            sb.append("/");
+                        }
+                    }
+                    String editThisPage = "<hr><a href=\"" + dogConfProperties.getProperty("editURL") + sb.toString() + "\">Edit this page</a>";
+                    String htmlOutput = start + asciidocCompiled + editThisPage + end;
+
                     File htmlFile = new File(generatedDir, inFile.getName().replace(".adoc", ".html"));
                     writeTextToFile(htmlOutput, htmlFile);
                     System.out.println("Going to copy (" + htmlOutput.getBytes().length + " bytes)adoc file:" + inFile.getAbsolutePath());
@@ -274,24 +291,26 @@ public class Main {
         Collections.sort(menuItems);
 
         MenuItem currentMenuItemHighlighted = null;
-        for(MenuItem e:menuItems) {
-            if(e.currentMenuItem) {
+        for (MenuItem e : menuItems) {
+            if (e.currentMenuItem) {
                 currentMenuItemHighlighted = e;
             }
         }
-        if(currentMenuItemHighlighted != null) {
+        if (currentMenuItemHighlighted != null) {
             String alwaysShowThisTree = currentMenuItemHighlighted.getVisibleNameWithoutFileName().split("/")[0];
-                    for(MenuItem e:menuItems) {
-            if(e.getLevelForMenu() > 1 && !e.getVisibleNameWithoutFileName().contains(alwaysShowThisTree)) {
-                e.hideThisMenuItem= true;
+            for (MenuItem e : menuItems) {
+                if (e.getLevelForMenu() > 1 && !e.getVisibleNameWithoutFileName().startsWith(alwaysShowThisTree)) {
+                    e.hideThisMenuItem = true;
+                }
             }
-        }
         }
         StringBuilder tempAsciidocForMenu = new StringBuilder();
         {
             int chapterNumber = 1;
             for (MenuItem e : menuItems) {
-
+                if (e.hideThisMenuItem) {
+                    continue;
+                }
                 tempAsciidocForMenu.append(e.createTabs(e.getLevelForMenu()));
                 tempAsciidocForMenu
                         .append("link:")
@@ -299,9 +318,8 @@ public class Main {
                         .append(e.visibleName)
                         .append(e.currentMenuItem ? "currentcurrentcurrentcurrentcurrent" : "")
                         .append(e.hideThisMenuItem ? "hidehidehidehidehide" : "")
-                        
                         .append("[")
-                        .append(e.getLevelForMenu() == 1  && !e.getVisibleNameWithoutFileName().equals("aaaaa") ? ((chapterNumber++) + ". ") : "").append(e.getLabel())
+                        .append(e.getLevelForMenu() == 1 && !e.getVisibleNameWithoutFileName().equals("aaaaa") ? ((chapterNumber++) + ". ") : "").append(e.getLabel())
                         .append("]").append("\n");
 
             }
@@ -330,6 +348,7 @@ public class Main {
                 div.leftMenu p{margin-bottom:0 !important;padding:0;}
                 .uulist ul li{display:none;}
                 .uhighlightedMenuItem *{display:block;}
+                  
                 div.leftMenu {height: 100%;width: 300px;float:left;}
                   
                 </style>
