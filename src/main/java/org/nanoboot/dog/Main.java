@@ -385,7 +385,13 @@ public class Main {
             files.add(currentFile);
             currentFile = currentFile.getParentFile();
         }
-        StringBuilder sb = new StringBuilder("<div class=\"navigation\" style=\"margin-top:20px;\"><a href=\"" + createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
+//        StringBuilder pathSb = new StringBuilder();
+//        for(int i = files.size() -1;i>=0;i--) {
+//            String f = files.get(i).getName();
+//            pathSb.append(f).append("/");
+//        }
+//        String path = pathSb.toString();
+        StringBuilder sb = new StringBuilder("<div class=\"navigation\" style=\"margin-top:20px;\"><a href=\"" + /*path +*/ createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
         if (files.size() > 1 || !currentFile.getName().equals("index.adoc")) {
             sb.append(" > ");
         }
@@ -396,21 +402,22 @@ public class Main {
             }
             sb
                     .append("<a href=\"")
-                    .append(createDoubleDotSlash(files.size() - i - (i > 0 ? 1 : 2)))
+                    .append(createDoubleDotSlash(i -1))
                     //.append(file.getName().replace(".adoc", ""))
-                    .append(i == 0 ? file.getName().replace(".adoc", "") : "index")
+                    .append(i == 0 ? (file.getName().replace(".adoc", "")) : "index")
                     .append(".html\">")
                     .append(createHumanName(file))
-                    .append("</a>");
-            if (i > 0) {
+                    .append("</a>\n");
+            //if (i > 1) {
                 sb.append(" > ");
-            }
+            //}
 
         }
         sb.append("</div>");
         String result = sb.toString();
-        if (result.endsWith(" > ")) {
-            result = result.substring(0, result.length() - 3);
+        if (result.endsWith(" > </div>")) {
+            result = result.substring(0, result.length() - 9);
+            result = result + "</div>";
         }
         return result;
     }
