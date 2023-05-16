@@ -2,7 +2,9 @@
 
 Dog is a documentation generator.
 
-It is inspired also by: https://docs.utn.se
+It is inspired also by: 
+ * https://docs.utn.se
+ * https://getgrav.org/
 
 ## How it works
 
