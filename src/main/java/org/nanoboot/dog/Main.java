@@ -32,13 +32,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import static org.asciidoctor.Asciidoctor.Factory.create;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import static org.asciidoctor.Asciidoctor.Factory.create;
 import org.apache.commons.io.FileUtils;
 import org.asciidoctor.Asciidoctor;
 
@@ -176,7 +176,7 @@ public class Main {
 
                     }
                     String titleSeparator = dogConfProperties.containsKey("titleSeparator") ? dogConfProperties.getProperty("titleSeparator") : "::";
-                    
+
                     String start
                             = """
                             <!DOCTYPE html>
@@ -201,10 +201,8 @@ public class Main {
                             </head>
                             <body class="article">
                               """
-                            +
-                            headerTemplate
-                            +
-                            """
+                            + headerTemplate
+                            + """
                             <div id="header">
                               """
                             + createNavigation(inFile, rootContentDir, dogConfProperties)
@@ -239,9 +237,8 @@ public class Main {
                                         Last updated 
                                      </div>
                               """
-                            
-                            +
-                            """
+
+                            + """
                                   </div>
                             """;
                     List<String> dirs = new ArrayList<>();
@@ -280,113 +277,12 @@ public class Main {
         }
     }
 
-    private static String createMenu(File rootContentDir, File inFile) {
-        List<File> files = listFilesInDir(rootContentDir, new ArrayList<>());
+    private static String createMenu(File rootContentDir, File currentFile) {
+        Menu menu = new Menu(rootContentDir);
+        return 
+                //"<pre>" + menu.toAsciidoc(currentFile.getAbsolutePath().split("content")[1]) + "</pre>" +
+        menu.toHtml(currentFile.getAbsolutePath().split("content")[1]);
 
-        List<MenuItem> menuItems = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
-        int countOfStepsToBaseDirectory = getCountOfSlashOccurences(inFile.getAbsolutePath().split("content")[1]) - 1;
-        for (File f : files) {
-            if (f.isDirectory()) {
-                continue;
-            }
-            String path = f.getAbsolutePath();
-            if (path.endsWith(".adoc")) {
-                path = path.replace(".adoc", ".html");
-            }
-            path = path.replace("content", "generated");
-
-            String visibleName = path.split("/generated/")[1];
-
-            String doubleDotsSlash = createDoubleDotSlash(countOfStepsToBaseDirectory);
-
-            menuItems.add(new MenuItem(doubleDotsSlash, visibleName, f.getName(), inFile.getAbsolutePath().equals(f.getAbsolutePath())));
-        }
-        Collections.sort(menuItems);
-
-        MenuItem currentMenuItemHighlighted = null;
-        for (MenuItem e : menuItems) {
-            if (e.currentMenuItem) {
-                currentMenuItemHighlighted = e;
-            }
-        }
-        if (currentMenuItemHighlighted != null) {
-            String alwaysShowThisTree = currentMenuItemHighlighted.getVisibleNameWithoutFileName().split("/")[0];
-            for (MenuItem e : menuItems) {
-                if (e.getLevelForMenu() > 1 && !e.getVisibleNameWithoutFileName().startsWith(alwaysShowThisTree)) {
-                    e.hideThisMenuItem = true;
-                }
-            }
-        }
-        StringBuilder tempAsciidocForMenu = new StringBuilder();
-        {
-            int chapterNumber = 1;
-            for (MenuItem e : menuItems) {
-                if (e.hideThisMenuItem) {
-                    continue;
-                }
-                tempAsciidocForMenu.append(e.createTabs(e.getLevelForMenu()));
-                tempAsciidocForMenu
-                        .append("link:")
-                        .append(e.doubleDotsSlash)
-                        .append(e.visibleName)
-                        .append(e.currentMenuItem ? "currentcurrentcurrentcurrentcurrent" : "")
-                        .append(e.hideThisMenuItem ? "hidehidehidehidehide" : "")
-                        .append("[")
-                        .append(e.getLevelForMenu() == 1 && !e.getVisibleNameWithoutFileName().equals("aaaaa") ? ((chapterNumber++) + ". ") : "").append(e.getLabel())
-                        .append("]").append("\n");
-
-            }
-
-        }
-        System.out.println(tempAsciidocForMenu);
-        Asciidoctor asciidoctor = create();
-
-        String tempAsciidocForMenuProcessed = asciidoctor
-                .convert(tempAsciidocForMenu.toString(), new HashMap<String, Object>());
-        tempAsciidocForMenuProcessed
-                = """
-                <style>
-                div.leftMenu {background: rgb(50, 50, 50);max-width:300px;padding-top:10px; padding-bottom:10px;}
-                div.leftMenu *{font-family: Arial;color:rgb(204, 204, 204);}
-                div.leftMenu ul{list-style: none;padding-left:0;}
-                /*div.leftMenu ul li {margin-top:0px !important;margin-bottom:0px !important;padding-left: 10px;}*/
-                div.leftMenu ul li {margin-top:0px !important;margin-bottom:0px !important;padding-top:0px;padding-bottom:0px;padding-left:0px;}
-                div.leftMenu ul li ul li {margin-left:10px;padding-left:15px;}
-                div.leftMenu ul li a{text-decoration:none;display:block;padding: 5px 10px 5px 15px;}
-                div.leftMenu ul li a:hover{color:white;}
-                /*div.leftMenu ul li:hover {background: rgb(70,70,70);}*/
-                .highlightedMenuItem {/*color:#FFFF99 !important;*/font-weight:bold;background: rgb(32, 39, 43);color:rgb(70,70,70) !important;background:white;}
-                div.leftMenu .highlightedMenuItem:hover{color:rgb(70,70,70); !important;}
-                div.leftMenu>ul {margin-left:0 !important;}
-                div.leftMenu p{margin-bottom:0 !important;padding:0;}
-                .uulist ul li{display:none;}
-                .uhighlightedMenuItem *{display:block;}
-                  
-                div.leftMenu {height: 100%;min-height: 400px;width: 300px;float:left;}
-                #content{padding-left:40px;}
-                  
-                </style>
-                """
-                + tempAsciidocForMenuProcessed.replaceFirst("<div class=\"ulist\">", "<div class=\"leftMenu\">");
-        tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("currentcurrentcurrentcurrentcurrent\"", "\" class=\"highlightedMenuItem\"");
-        tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("currentcurrentcurrentcurrentcurrenthidehidehidehidehide\"", "hidehidehidehidehide\" class=\"highlightedMenuItem\"");
-        tempAsciidocForMenuProcessed = tempAsciidocForMenuProcessed.replace("hidehidehidehidehide\"", "\" style=\"display:none !important;background:yellow;\"");
-        sb.append(tempAsciidocForMenuProcessed);
-
-        sb.append("<br>\n");
-
-        return sb.toString();
-    }
-
-    public static int getCountOfSlashOccurences(String string) {
-        int i = 0;
-        for (char ch : string.toCharArray()) {
-            if (ch == '/') {
-                i++;
-            }
-        }
-        return i++;
     }
 
     private static String createNavigation(File adocFile, File rootContentDir, Properties dogConfProperties) {
@@ -406,7 +302,7 @@ public class Main {
 //            pathSb.append(f).append("/");
 //        }
 //        String path = pathSb.toString();
-        StringBuilder sb = new StringBuilder("<div class=\"navigation\" style=\"margin-top:20px;\"><a href=\"" + /*path +*/ createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
+        StringBuilder sb = new StringBuilder("<div class=\"navigation\" style=\"margin-top:20px;\"><a href=\"" + /*path +*/ Utils.createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
         if (files.size() > 1 || !currentFile.getName().equals("index.adoc")) {
             sb.append(" > ");
         }
@@ -417,14 +313,14 @@ public class Main {
             }
             sb
                     .append("<a href=\"")
-                    .append(createDoubleDotSlash(i -1))
+                    .append(Utils.createDoubleDotSlash(i - 1))
                     //.append(file.getName().replace(".adoc", ""))
                     .append(i == 0 ? (file.getName().replace(".adoc", "")) : "index")
                     .append(".html\">")
                     .append(createHumanName(file, dogConfProperties))
                     .append("</a>\n");
             //if (i > 1) {
-                sb.append(" > ");
+            sb.append(" > ");
             //}
 
         }
@@ -437,27 +333,6 @@ public class Main {
         return result + "<hr>";
     }
 
-    private static List<File> listFilesInDir(File dir, List<File> files) {
-        files.add(dir);
-        for (File f : dir.listFiles()) {
-            if (f.isDirectory()) {
-                listFilesInDir(f, files);
-            } else {
-                files.add(f);
-            }
-        }
-        return files;
-    }
-
-    private static String createDoubleDotSlash(int times) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 1; i <= times; i++) {
-            sb.append("../");
-        }
-        String result = sb.toString();
-        return result;//.substring(0, result.length() - 1);
-    }
-
     private static String createHumanName(File inFile, Properties dogConfProperties) {
         System.out.println("calling createHumanName for inFile=" + inFile.getName());
         String result = inFile.getName();
@@ -468,9 +343,9 @@ public class Main {
         if (Character.isLetter(result.charAt(0))) {
             result = Character.toUpperCase(result.charAt(0)) + result.substring(1);
         }
-        if(result.equals("Index")) {
+        if (result.equals("Index")) {
             File parentFile = inFile.getParentFile();
-            if(parentFile.getName().equals("content")) {
+            if (parentFile.getName().equals("content")) {
                 String frontPageName = dogConfProperties.getProperty("frontPageName", "");
                 return frontPageName.isBlank() ? "Home" : frontPageName;
             }
@@ -507,7 +382,7 @@ public class Main {
     }
 
     private static String readTextFromFile(File file) {
-        if(!file.exists()) {
+        if (!file.exists()) {
             return "";
         }
         try {

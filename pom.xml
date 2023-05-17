@@ -40,6 +40,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <checkstyle.skip>true</checkstyle.skip><!-- TODO: make false-->
         <power.version>2.0.0-SNAPSHOT</power.version>
+        <maven.compiler.source>19</maven.compiler.source>
+        <maven.compiler.target>19</maven.compiler.target>
     </properties>
 
     <build>
@@ -53,6 +55,26 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <!--<compilerArgs>
+                        -|-enable-preview
+                    </compilerArgs>-->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <source>${javase.version}</source>
+                    <target>${javase.version}</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -66,6 +88,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    
                 </configuration>
                 <executions>
                     <execution>
@@ -118,12 +141,46 @@
             <version>2.11.0</version>
         </dependency>
 
-
         <dependency>
             <groupId>org.asciidoctor</groupId>
             <artifactId>asciidoctorj</artifactId>
             <version>2.5.8</version> <!--(1)-->
         </dependency>
+		
+		<!-- Lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>releases</id>
+            <name>nanoboot-releases-repository</name>
+            <url>https://maven.nanoboot.org/releases</url>
+        </repository>
+        <repository>
+            <id>snapshots</id>
+            <name>nanoboot-snapshots-repository</name>
+            <url>https://maven.nanoboot.org/snapshots</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>releases</id>
+            <name>nanoboot-releases-repository</name>
+            <url>https://maven.nanoboot.org/releases</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>snapshots</id>
+            <name>nanoboot-snapshots-repository</name>
+            <url>https://maven.nanoboot.org/snapshots</url>
+        </pluginRepository>
+    </pluginRepositories>
+	
 </project>

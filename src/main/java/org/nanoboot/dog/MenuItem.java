@@ -18,65 +18,65 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 package org.nanoboot.dog;
 
+import lombok.Getter;
+
 /**
  *
  * @author robertvokac
  */
 public class MenuItem implements Comparable<MenuItem> {
 
-    String doubleDotsSlash;
-    String visibleName;
-    String fileName;
-    boolean currentMenuItem;
-    boolean hideThisMenuItem = false;
+    @Getter
+    private final String file;
+    private final int weight;
+    //
+    private final String[] parents;
+    @Getter
+    private final String fileName;
+    private final String parent;
 
-    public MenuItem(String doubleDotsSlash, String visibleName, String fileName, boolean currentMenuItem) {
-        this.doubleDotsSlash = doubleDotsSlash;
-        this.visibleName = visibleName;
-        this.fileName = fileName;
-        this.currentMenuItem = currentMenuItem;
+    public MenuItem(String file, int weight) {
+        this.file = file;
+        this.parents = file.split("/");
+        this.fileName = parents[parents.length - 1];
+        this.parent = parents.length < 2 ? "Home" : parents[parents.length - 2];
+        this.weight = weight;
+
     }
 
-    public String getVisibleNameWithoutFileName() {
-        String result = visibleName.replace(fileName.replace(".adoc", ".html"), "");
-        if (result.isBlank()) {
-            return "aaaaa";
+    public String getFileWithoutFileName() {
+        return file.substring(0, file.length() - fileName.length());
+    }
+
+    public String getParent(int index) {
+        return parents[index];
+    }
+    public boolean isIndex() {
+        return fileName.equals(Constants.INDEXHTML);
+    }
+
+    public String createLabel() {
+        String label;
+        if (isIndex()) {
+            label = parent;
         } else {
-            return result;
+            label = fileName.replace(".html", "");
         }
-    }
-
-    public String getLabel() {
-        String[] array = visibleName.split("/");
-        if (fileName.equals("index.adoc")) {
-            if (array.length == 1) {
-                return "Home";
-            } else {
-                return array[array.length - 1 - 1].replace("_", " ");
-            }
-        }
-        String result = fileName.replace(".adoc", "");;
-        if (Character.isLetter(result.charAt(0)) && Character.isLowerCase(result.charAt(0))) {
-            result = Character.toUpperCase(result.charAt(0))
-                    + (result.length() == 1 ? "" : result.substring(1));
-        }
-        System.out.println("result=" + result);
-        if (result.contains("_")) {
-            result = result.replace("_", " ");
-        }
-        return result;
+        label = Utils.makeFirstLetterUppercase(label);
+        label = Utils.replaceUnderscoresBySpaces(label);
+        return label;
 
     }
 
     public int getLevel() {
-        return Main.getCountOfSlashOccurences(visibleName) + 1;
+        return Utils.getCountOfSlashOccurences(file) + 1;
     }
 
     public int getLevelForMenu() {
-        if (getLevel() == 1 && fileName.equals("index.adoc")) {
+        if (getLevel() == 1 && isIndex()) {
             return 1;
         }
-        if (getLevel() > 1 && fileName.equals("index.adoc")) {
+        if (getLevel() > 1 && isIndex()) {
             return getLevel() - 1;
         }
         return getLevel();
@@ -94,28 +94,44 @@ public class MenuItem implements Comparable<MenuItem> {
     @Override
     public int compareTo(MenuItem mi2) {
         MenuItem mi1 = this;
-        boolean mi1IsIndex = mi1.fileName.equals("index.adoc");
-        boolean mi2IsIndex = mi2.fileName.equals("index.adoc");
+        boolean mi1IsIndex = mi1.isIndex();
+        boolean mi2IsIndex = mi2.isIndex();
 
-        int comparison5 = mi1.getVisibleNameWithoutFileName().toLowerCase().compareTo(mi2.getVisibleNameWithoutFileName().toLowerCase());
-        if (comparison5 != 0) {
-            return comparison5;
-        }
-        if (mi1IsIndex) {
+        if (mi1.getFileWithoutFileName().isEmpty() && !mi2.getFileWithoutFileName().isEmpty()) {
             return -1;
         }
-        if (mi2IsIndex) {
+        if (!mi1.getFileWithoutFileName().isEmpty() && mi2.getFileWithoutFileName().isEmpty()) {
             return 1;
         }
 
-        int comparison10 = mi1.fileName.toLowerCase().compareTo(mi2.fileName.toLowerCase());
+        int fileArrayMaxLength = mi1.parents.length > mi2.parents.length ? mi1.parents.length : mi2.parents.length;
 
-        return comparison10;
+        for (int i = 0; i < fileArrayMaxLength; i++) {
+            String string1 = mi1.parents.length == fileArrayMaxLength ? mi1.parents[i] : mi2.parents[i];
+            String string2 = mi2.parents.length == fileArrayMaxLength ? mi2.parents[i] : string1;
+            if (!string1.equals(string2)) {
+                if (mi1.getFileWithoutFileName().equals(mi2.getFileWithoutFileName())) {
+                    if (mi1IsIndex) {
+                        return -1;
+                    }
+                    if (mi2IsIndex) {
+                        return 1;
+                    }
+                }
+                return string1.toLowerCase().compareTo(string2.toLowerCase());
+            }
+        }
+        return 0;
     }
 
     @Override
     public String toString() {
-        return "MenuItem{" + "..=" + doubleDotsSlash + ";visibleName=" + visibleName + ";fileName=" + fileName + '}';
+        return "MenuItem{" + "file=" + file + ", weight=" + weight + ", fileArray=" + parents + ", fileName=" + fileName + ", parent=" + parent + '}';
+    }
+
+    public String toAsciidoc() {
+        //todo
+        return null;
     }
 
 }
