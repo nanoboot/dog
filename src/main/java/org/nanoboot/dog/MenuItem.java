@@ -24,10 +24,11 @@ import lombok.Getter;
  *
  * @author robertvokac
  */
-public class MenuItem implements Comparable<MenuItem> {
+public class MenuItem {
 
     @Getter
     private final String file;
+    @Getter
     private final int weight;
     //
     private final String[] parents;
@@ -40,8 +41,21 @@ public class MenuItem implements Comparable<MenuItem> {
         this.parents = file.split("/");
         this.fileName = parents[parents.length - 1];
         this.parent = parents.length < 2 ? "Home" : parents[parents.length - 2];
+
         this.weight = weight;
 
+    }
+
+    public String createMenuParent() {
+        if (getLevelForMenu() == 1) {
+            return "";
+        }
+        boolean isIndex = fileName.equals(Constants.INDEXHTML);
+        if (isIndex) {
+            return file.substring(0, file.length() - 2 - fileName.length() - parent.length());
+        } else {
+            return file.substring(0, file.length() - 1 - fileName.length());
+        }
     }
 
     public String getFileWithoutFileName() {
@@ -51,6 +65,11 @@ public class MenuItem implements Comparable<MenuItem> {
     public String getParent(int index) {
         return parents[index];
     }
+
+    public int getParentsLength() {
+        return parents.length;
+    }
+
     public boolean isIndex() {
         return fileName.equals(Constants.INDEXHTML);
     }
@@ -89,39 +108,6 @@ public class MenuItem implements Comparable<MenuItem> {
         }
         sb.append(" ");
         return sb.toString();
-    }
-
-    @Override
-    public int compareTo(MenuItem mi2) {
-        MenuItem mi1 = this;
-        boolean mi1IsIndex = mi1.isIndex();
-        boolean mi2IsIndex = mi2.isIndex();
-
-        if (mi1.getFileWithoutFileName().isEmpty() && !mi2.getFileWithoutFileName().isEmpty()) {
-            return -1;
-        }
-        if (!mi1.getFileWithoutFileName().isEmpty() && mi2.getFileWithoutFileName().isEmpty()) {
-            return 1;
-        }
-
-        int fileArrayMaxLength = mi1.parents.length > mi2.parents.length ? mi1.parents.length : mi2.parents.length;
-
-        for (int i = 0; i < fileArrayMaxLength; i++) {
-            String string1 = mi1.parents.length == fileArrayMaxLength ? mi1.parents[i] : mi2.parents[i];
-            String string2 = mi2.parents.length == fileArrayMaxLength ? mi2.parents[i] : string1;
-            if (!string1.equals(string2)) {
-                if (mi1.getFileWithoutFileName().equals(mi2.getFileWithoutFileName())) {
-                    if (mi1IsIndex) {
-                        return -1;
-                    }
-                    if (mi2IsIndex) {
-                        return 1;
-                    }
-                }
-                return string1.toLowerCase().compareTo(string2.toLowerCase());
-            }
-        }
-        return 0;
     }
 
     @Override

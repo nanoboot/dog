@@ -6,7 +6,7 @@ package org.nanoboot.dog;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import static org.asciidoctor.Asciidoctor.Factory.create;
@@ -18,7 +18,34 @@ import org.asciidoctor.Asciidoctor;
  */
 public class Menu {
 
-    private final List<MenuItem> menuItems;
+    private List<MenuItem> menuItems;
+
+    static class MenuItemWithTheSameParentComparator
+            implements Comparator<MenuItem> {
+
+        // Method 1
+        // To compare customers
+        @Override
+        public int compare(MenuItem mi1, MenuItem mi2) {
+
+            if (mi1.getWeight() != mi2.getWeight()) {
+                return Integer.valueOf(mi2.getWeight()).compareTo(mi1.getWeight());
+            }
+            return mi1.createLabel().toLowerCase().compareTo(mi2.createLabel().toLowerCase());
+        }
+
+    }
+
+    static class MenuItemWeightComparator
+            implements Comparator<MenuItem> {
+
+        // Method 1
+        // To compare customers
+        @Override
+        public int compare(MenuItem mi1, MenuItem mi2) {
+            return Integer.valueOf(mi2.getWeight()).compareTo(mi1.getWeight());
+        }
+    }
 
     public Menu(File rootContentDir) {
         List<File> adocFiles = Utils.listAdocFilesInDir(rootContentDir);
@@ -34,13 +61,73 @@ public class Menu {
 
             String finalPath = path.split("/generated/")[1];
 
-            menuItems.add(new MenuItem(finalPath, 1000));
-        }
-        Collections.sort(menuItems);
-        for (MenuItem mi : menuItems) {
-            System.out.println("Found menu item: " + mi.toString());
+            menuItems.add(new MenuItem(finalPath, 1000/*(int) (Math.random() * 100)*/));
         }
 
+        menuItems = sortMenuItems(menuItems);
+        System.out.println("Going to use these menu items (sorted in this order):");
+        int i = 0;
+        for (MenuItem mi : menuItems) {
+            System.out.println((++i) + " " + mi.getFile());
+        }
+
+    }
+
+    private static List<MenuItem> sortMenuItems(List<MenuItem> menuItemsUnsorted) {
+        List<MenuItem> result = new ArrayList<>();
+
+        MenuItemMap menuItemMap = new MenuItemMap(menuItemsUnsorted);
+        if (menuItemMap.containsKey("")) {
+            List<MenuItem> list = menuItemMap.getList("");
+            for (MenuItem mi : list) {
+                if (mi.getFile().equals("index.html")) {
+                    list.remove(mi);
+                    result.add(mi);
+                    break;
+                }
+            }
+        }
+        menuItemMap.show();
+        result.addAll(listChildren("", menuItemMap));
+        return result;
+
+    }
+
+    private static List<MenuItem> listChildren(String menuParent, MenuItemMap menuItemMap) {
+        System.out.println("--------calling loadChildren(" + menuParent + ", ...)");
+        List<MenuItem> result = new ArrayList<>();
+        if (!menuItemMap.containsKey(menuParent)) {
+            //nothing to do
+            System.err.println("!mapOfLists.containsKey(menuParent) - nothing to do");
+            return result;
+        }
+        List<MenuItem> list = menuItemMap.getList(menuParent);
+        if (list.isEmpty()) {
+            //nothing to do
+            System.err.println("list.isEmpty() - nothing to do");
+            return result;
+        }
+
+        List<MenuItem> children = menuItemMap.getList(menuParent);
+
+        for (MenuItem child : children) {
+            System.out.println("Found child: " + child.getFile());
+            result.add(child);
+
+            if (child.isIndex()) {
+                String key = menuParent + (child.getLevelForMenu() == 1 ? "" : "/") + child.getParent(child.getParentsLength() - 2);
+
+                List<MenuItem> subChildren = listChildren(key, menuItemMap);
+                result.addAll(subChildren);
+                for (MenuItem subChild : subChildren) {
+                    System.out.println("Found subChild: " + subChild.getFile());
+                }
+
+            }
+
+        }
+
+        return result;
     }
 
     public String toAsciidoc(String fileOfHighlightedMenuItem) {
@@ -49,20 +136,21 @@ public class Menu {
         }
         int countOfStepsToBaseDirectory = Utils.getCountOfSlashOccurences(fileOfHighlightedMenuItem);
         String doubleDotsSlash = Utils.createDoubleDotSlash(countOfStepsToBaseDirectory);
-        System.out.println("fileOfHighlightedMenuItem=" + fileOfHighlightedMenuItem);
+
         StringBuilder asciidoc = new StringBuilder();
         {
             int chapterNumber = 1;
 
             String wantedParent0 = fileOfHighlightedMenuItem.contains("/") ? fileOfHighlightedMenuItem.split("/")[0] : "";
-            System.out.println("wantedParent0=" + wantedParent0);
 
             for (MenuItem e : menuItems) {
 
+                //boolean hidden = false;
                 if (e.getLevelForMenu() > 1 && !e.getParent(0).equals(wantedParent0)) {
                     continue;
+                    //hidden = true;
                 }
-                System.out.println("iterating file:" + e.getFile() + " fileOfHighlightedMenuItem=" + fileOfHighlightedMenuItem);
+
                 asciidoc.append(e.createTabs(e.getLevelForMenu()));
                 asciidoc
                         .append("link:")
@@ -70,8 +158,13 @@ public class Menu {
                         .append(e.getFile())
                         .append(e.getFile().equals(fileOfHighlightedMenuItem) ? "%%%%highlighted%%%%" : "")
                         .append("[")
+                        
                         .append((e.getLevelForMenu() == 1 && e.getFileName().equals("index.html") && !e.getFileWithoutFileName().isEmpty()) ? ((chapterNumber++) + ". ") : "")
+                        //.append((!e.getFile().equals("index.html") && e.getFileName().equals("index.html")) ? " &#129977; " : ""/*"&#128196; "*/)
                         .append(e.createLabel())
+                        //.append("::(").append(e.createMenuParent()).append(")::").append(e.getFile())
+                        //.append(hidden ? " (hidden)" : "")
+                        //.append(":").append(e.getWeight())
                         .append("]").append("\n");
 
             }
@@ -95,7 +188,7 @@ public class Menu {
         String result
                 = """
                 <style>
-                div.leftMenu {background: rgb(50, 50, 50);max-width:300px;padding-top:10px; padding-bottom:10px;height: 100%;min-height: 400px;width: 300px;float:left;}
+                div.leftMenu {background: rgb(50, 50, 50);width: 300px;max-width:300px;padding-top:10px; padding-bottom:10px;height: 100%;min-height: 400px;float:left;}
                 div.leftMenu *{font-family: Arial;color:rgb(204, 204, 204);}
                 div.leftMenu ul{list-style: none;padding-left:0;}
                 div.leftMenu ul li {margin-top:0px !important;margin-bottom:0px !important;padding-top:0px;padding-bottom:0px;padding-left:0px;}

@@ -143,13 +143,15 @@ public class Main {
         }
         writeTextToFile(readTextFromResourceFile("/dog.css"), new File(generatedDir, "dog.css"));
         File contentDir = new File(inDir, "content");
-        processContentDir(contentDir, generatedDir, contentDir, dogConfProperties);
+        Menu menuInstance = new Menu(contentDir);
+        processContentDir(contentDir, generatedDir, contentDir, dogConfProperties, menuInstance);
     }
 
-    private static void processContentDir(File contentDir, File generatedDir, File rootContentDir, Properties dogConfProperties) {
+    private static void processContentDir(File contentDir, File generatedDir, File rootContentDir, Properties dogConfProperties, Menu menuInstance) {
         File templateDir = new File(rootContentDir.getParentFile().getAbsolutePath() + "/templates");
         String headerTemplate = readTextFromFile(new File(templateDir, "header.html"));
         String footerTemplate = readTextFromFile(new File(templateDir, "footer.html"));
+        
         for (File inFile : contentDir.listFiles()) {
             if (inFile.isFile()) {
                 if (inFile.getName().endsWith(".adoc")) {
@@ -160,7 +162,7 @@ public class Main {
                     String asciidocCompiled = asciidoctor
                             .convert(asciidocText, new HashMap<String, Object>());
                     String pathToRoot = contentDir.getAbsolutePath().replace(rootContentDir.getAbsolutePath(), "");
-                    System.out.println("pathToRoot=(" + pathToRoot + ")");
+                    
                     if (!pathToRoot.trim().isEmpty()) {
                         int count = 0;
                         for (char ch : pathToRoot.toCharArray()) {
@@ -211,7 +213,7 @@ public class Main {
                             + """
                             </h1>
                             </div>"""
-                            + createMenu(rootContentDir, inFile)
+                            + createMenu(menuInstance, inFile)
                             + """
                             <div id="content">
                     """;
@@ -261,9 +263,7 @@ public class Main {
 
                     File htmlFile = new File(generatedDir, inFile.getName().replace(".adoc", ".html"));
                     writeTextToFile(htmlOutput, htmlFile);
-                    System.out.println("Going to copy (" + htmlOutput.getBytes().length + " bytes)adoc file:" + inFile.getAbsolutePath());
-                    System.out.println("from:" + inFile.getAbsolutePath());
-                    System.out.println("to:" + htmlFile.getAbsolutePath());
+                    
                 } else {
                     copyFile(inFile, generatedDir);
                 }
@@ -272,13 +272,13 @@ public class Main {
             if (inFile.isDirectory()) {
                 File generatedDir2 = new File(generatedDir, inFile.getName());
                 generatedDir2.mkdir();
-                processContentDir(inFile, generatedDir2, rootContentDir, dogConfProperties);
+                processContentDir(inFile, generatedDir2, rootContentDir, dogConfProperties, menuInstance);
             }
         }
     }
 
-    private static String createMenu(File rootContentDir, File currentFile) {
-        Menu menu = new Menu(rootContentDir);
+    private static String createMenu(Menu menu, File currentFile) {
+        
         return 
                 //"<pre>" + menu.toAsciidoc(currentFile.getAbsolutePath().split("content")[1]) + "</pre>" +
         menu.toHtml(currentFile.getAbsolutePath().split("content")[1]);
@@ -334,7 +334,7 @@ public class Main {
     }
 
     private static String createHumanName(File inFile, Properties dogConfProperties) {
-        System.out.println("calling createHumanName for inFile=" + inFile.getName());
+        
         String result = inFile.getName();
         if (result.endsWith(".adoc")) {
             result = result.substring(0, inFile.getName().length() - 5);
@@ -357,9 +357,7 @@ public class Main {
     private static void copyFile(File originalFile, File copiedFile) throws DogException {
         Path originalPath = originalFile.toPath();
         Path copied = new File(copiedFile, originalFile.getName()).toPath();
-        System.out.println("Going to copy:");
-        System.out.println("from:" + originalPath.toString());
-        System.out.println("to:" + copied.toString());
+        
         try {
             Files.copy(originalPath, copied, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
