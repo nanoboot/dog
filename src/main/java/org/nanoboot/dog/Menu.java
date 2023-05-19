@@ -61,7 +61,7 @@ public class Menu {
 
             String finalPath = path.split("/generated/")[1];
 
-            menuItems.add(new MenuItem(finalPath, 1000/*(int) (Math.random() * 100)*/));
+            menuItems.add(new MenuItem(finalPath, loadWeight(f)/*(int) (Math.random() * 100)*/));
         }
 
         menuItems = sortMenuItems(menuItems);
@@ -73,6 +73,26 @@ public class Menu {
 
     }
 
+    private static Integer loadWeight(File f) {
+        String s = Utils.readTextFromFile(f);
+        boolean commentStarted = false;
+        for(String line:s.split("\n")) {
+            if(line.trim().equals("////")) {
+                commentStarted = !commentStarted;
+                continue;
+            }
+            
+            if(commentStarted) {
+                if(line.trim().startsWith("weight=")) {
+                    String[] keyValue = line.split("=");
+                    if(keyValue.length == 2 && keyValue[0].equals("weight")) {
+                        return Integer.valueOf(keyValue[1]);
+                    }
+                }
+            }
+        }
+        return Integer.MAX_VALUE;
+    }
     private static List<MenuItem> sortMenuItems(List<MenuItem> menuItemsUnsorted) {
         List<MenuItem> result = new ArrayList<>();
 

@@ -141,7 +141,7 @@ public class Main {
             ex.printStackTrace();
             throw new DogException("Loading file dog.conf failed.", ex);
         }
-        writeTextToFile(readTextFromResourceFile("/dog.css"), new File(generatedDir, "dog.css"));
+        Utils.writeTextToFile(Utils.readTextFromResourceFile("/dog.css"), new File(generatedDir, "dog.css"));
         File contentDir = new File(inDir, "content");
         Menu menuInstance = new Menu(contentDir);
         processContentDir(contentDir, generatedDir, contentDir, dogConfProperties, menuInstance);
@@ -149,15 +149,15 @@ public class Main {
 
     private static void processContentDir(File contentDir, File generatedDir, File rootContentDir, Properties dogConfProperties, Menu menuInstance) {
         File templateDir = new File(rootContentDir.getParentFile().getAbsolutePath() + "/templates");
-        String headerTemplate = readTextFromFile(new File(templateDir, "header.html"));
-        String footerTemplate = readTextFromFile(new File(templateDir, "footer.html"));
+        String headerTemplate = Utils.readTextFromFile(new File(templateDir, "header.html"));
+        String footerTemplate = Utils.readTextFromFile(new File(templateDir, "footer.html"));
         
         for (File inFile : contentDir.listFiles()) {
             if (inFile.isFile()) {
                 if (inFile.getName().endsWith(".adoc")) {
 
                     Asciidoctor asciidoctor = create();
-                    String asciidocText = readTextFromFile(inFile);
+                    String asciidocText = Utils.readTextFromFile(inFile);
 
                     String asciidocCompiled = asciidoctor
                             .convert(asciidocText, new HashMap<String, Object>());
@@ -262,10 +262,10 @@ public class Main {
                     String htmlOutput = start + asciidocCompiled + editThisPage + end;
 
                     File htmlFile = new File(generatedDir, inFile.getName().replace(".adoc", ".html"));
-                    writeTextToFile(htmlOutput, htmlFile);
+                    Utils.writeTextToFile(htmlOutput, htmlFile);
                     
                 } else {
-                    copyFile(inFile, generatedDir);
+                    Utils.copyFile(inFile, generatedDir);
                 }
 
             }
@@ -352,66 +352,6 @@ public class Main {
             return createHumanName(parentFile, dogConfProperties);
         }
         return result;
-    }
-
-    private static void copyFile(File originalFile, File copiedFile) throws DogException {
-        Path originalPath = originalFile.toPath();
-        Path copied = new File(copiedFile, originalFile.getName()).toPath();
-        
-        try {
-            Files.copy(originalPath, copied, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            throw new DogException("Copying file failed: " + originalFile.getAbsolutePath());
-        }
-    }
-
-    private static void writeTextToFile(String text, File file) {
-        FileWriter fileWriter;
-        try {
-            fileWriter = new FileWriter(file);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            throw new DogException("Writing to file failed: " + file.getName(), ex);
-        }
-        PrintWriter printWriter = new PrintWriter(fileWriter);
-        printWriter.print(text);
-        printWriter.close();
-    }
-
-    private static String readTextFromFile(File file) {
-        if (!file.exists()) {
-            return "";
-        }
-        try {
-            return new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
-        } catch (IOException ex) {
-            throw new DogException("Reading file failed: " + file.getName(), ex);
-        }
-    }
-
-    private static String readTextFromResourceFile(String fileName) {
-        try {
-            Class clazz = Main.class;
-            InputStream inputStream = clazz.getResourceAsStream(fileName);
-            return readFromInputStream(inputStream);
-        } catch (IOException ex) {
-            throw new DogException("Reading file failed: " + fileName, ex);
-        }
-
-    }
-
-    private static String readFromInputStream(InputStream inputStream)
-            throws IOException {
-        StringBuilder resultStringBuilder = new StringBuilder();
-        try (BufferedReader br
-                = new BufferedReader(new InputStreamReader(inputStream))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                resultStringBuilder.append(line).append("\n");
-            }
-        }
-        return resultStringBuilder.toString();
     }
 
     private static void executeCommandServer(Map<String, String> map) {

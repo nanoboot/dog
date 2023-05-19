@@ -4,7 +4,17 @@
  */
 package org.nanoboot.dog;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,4 +98,64 @@ public class Utils {
         return result;//.substring(0, result.length() - 1);
     }
 
+    
+    public static void copyFile(File originalFile, File copiedFile) throws DogException {
+        Path originalPath = originalFile.toPath();
+        Path copied = new File(copiedFile, originalFile.getName()).toPath();
+        
+        try {
+            Files.copy(originalPath, copied, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            throw new DogException("Copying file failed: " + originalFile.getAbsolutePath());
+        }
+    }
+
+    public static void writeTextToFile(String text, File file) {
+        FileWriter fileWriter;
+        try {
+            fileWriter = new FileWriter(file);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            throw new DogException("Writing to file failed: " + file.getName(), ex);
+        }
+        PrintWriter printWriter = new PrintWriter(fileWriter);
+        printWriter.print(text);
+        printWriter.close();
+    }
+
+    public static String readTextFromFile(File file) {
+        if (!file.exists()) {
+            return "";
+        }
+        try {
+            return new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
+        } catch (IOException ex) {
+            throw new DogException("Reading file failed: " + file.getName(), ex);
+        }
+    }
+
+    public static String readTextFromResourceFile(String fileName) {
+        try {
+            Class clazz = Main.class;
+            InputStream inputStream = clazz.getResourceAsStream(fileName);
+            return readFromInputStream(inputStream);
+        } catch (IOException ex) {
+            throw new DogException("Reading file failed: " + fileName, ex);
+        }
+
+    }
+
+    public static String readFromInputStream(InputStream inputStream)
+            throws IOException {
+        StringBuilder resultStringBuilder = new StringBuilder();
+        try (BufferedReader br
+                = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                resultStringBuilder.append(line).append("\n");
+            }
+        }
+        return resultStringBuilder.toString();
+    }
 }
