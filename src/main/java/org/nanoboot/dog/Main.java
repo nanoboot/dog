@@ -296,12 +296,7 @@ public class Main {
             files.add(currentFile);
             currentFile = currentFile.getParentFile();
         }
-//        StringBuilder pathSb = new StringBuilder();
-//        for(int i = files.size() -1;i>=0;i--) {
-//            String f = files.get(i).getName();
-//            pathSb.append(f).append("/");
-//        }
-//        String path = pathSb.toString();
+
         StringBuilder sb = new StringBuilder("<div class=\"navigation\" style=\"margin-top:20px;\"><a href=\"" + /*path +*/ Utils.createDoubleDotSlash(files.size() - 1) + "index.html\">Home</a>");
         if (files.size() > 1 || !currentFile.getName().equals("index.adoc")) {
             sb.append(" > ");
@@ -314,14 +309,12 @@ public class Main {
             sb
                     .append("<a href=\"")
                     .append(Utils.createDoubleDotSlash(i - 1))
-                    //.append(file.getName().replace(".adoc", ""))
                     .append(i == 0 ? (file.getName().replace(".adoc", "")) : "index")
                     .append(".html\">")
                     .append(createHumanName(file, dogConfProperties))
                     .append("</a>\n");
-            //if (i > 1) {
+
             sb.append(" > ");
-            //}
 
         }
         sb.append("</div>");
