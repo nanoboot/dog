@@ -17,20 +17,39 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-package org.nanoboot.dog;
+package org.nanoboot.dog.commands;
+
+import java.util.HashMap;
+import org.nanoboot.dog.Command;
+import org.nanoboot.dog.Constants;
+import org.nanoboot.dog.DogArgs;
+import org.asciidoctor.Asciidoctor;
+import static org.asciidoctor.Asciidoctor.Factory.create;
+import org.apache.commons.io.FileUtils;
 
 /**
- * @author <a href="mailto:robertvokac@nanoboot.org">Robert Vokac</a>
- * @since 0.0.0
+ *
+ * @author pc00289
  */
-public class DogException extends RuntimeException {
+public class TestCommand implements Command{
 
-    public DogException(String msg) {
-        super(msg);
+    public TestCommand() {
     }
 
-    public DogException(String msg, Exception e) {
-        super(msg, e);
+    @Override
+    public String getName() {
+        return "test";
     }
-    
+
+    @Override
+    public void run(DogArgs dogArgs) {
+        String input = Constants.TEST_ASCIIDOC;
+
+        Asciidoctor asciidoctor = create();
+
+        String output = asciidoctor
+                .convert(input, new HashMap<String, Object>());
+        System.out.println(output);
+
+    }
 }
