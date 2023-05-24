@@ -34,7 +34,7 @@ import java.util.Set;
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("Dog - documentation generator\n");
+        System.out.println("Dog - documentation generator");
         
         DogArgs dogArgs = new DogArgs(args);
         String command = dogArgs.getCommand();
@@ -54,10 +54,7 @@ public class Main {
             }
         }
         if(foundCommand == null) {
-            System.err.println("Error: Command \"" + command + "\" is not supported.\n");
-            
-            new HelpCommand().run(dogArgs);
-            System.exit(1);
+            throw new DogException("Command \"" + command + "\" is not supported.");
         }
         foundCommand.run(dogArgs);
     }
