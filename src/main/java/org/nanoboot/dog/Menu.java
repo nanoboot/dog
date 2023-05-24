@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
 package org.nanoboot.dog;
 
 import java.io.File;
@@ -24,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import lombok.extern.log4j.Log4j2;
 import static org.asciidoctor.Asciidoctor.Factory.create;
 import org.asciidoctor.Asciidoctor;
 
@@ -31,6 +31,7 @@ import org.asciidoctor.Asciidoctor;
  *
  * @author pc00289
  */
+@Log4j2
 public class Menu {
 
     private List<MenuItem> menuItems;
@@ -80,10 +81,10 @@ public class Menu {
         }
 
         menuItems = sortMenuItems(menuItems);
-        System.out.println("Going to use these menu items (sorted in this order):");
+        LOG.info("Going to use these menu items (sorted in this order):");
         int i = 0;
         for (MenuItem mi : menuItems) {
-            System.out.println((++i) + " " + mi.getFile());
+            LOG.info((++i) + " " + mi.getFile());
         }
 
     }
@@ -91,16 +92,16 @@ public class Menu {
     private static Integer loadWeight(File f) {
         String s = Utils.readTextFromFile(f);
         boolean commentStarted = false;
-        for(String line:s.split("\n")) {
-            if(line.trim().equals("////")) {
+        for (String line : s.split("\n")) {
+            if (line.trim().equals("////")) {
                 commentStarted = !commentStarted;
                 continue;
             }
-            
-            if(commentStarted) {
-                if(line.trim().startsWith("weight=")) {
+
+            if (commentStarted) {
+                if (line.trim().startsWith("weight=")) {
                     String[] keyValue = line.split("=");
-                    if(keyValue.length == 2 && keyValue[0].equals("weight")) {
+                    if (keyValue.length == 2 && keyValue[0].equals("weight")) {
                         return Integer.valueOf(keyValue[1]);
                     }
                 }
@@ -108,6 +109,7 @@ public class Menu {
         }
         return Integer.MAX_VALUE;
     }
+
     private static List<MenuItem> sortMenuItems(List<MenuItem> menuItemsUnsorted) {
         List<MenuItem> result = new ArrayList<>();
 
@@ -129,24 +131,30 @@ public class Menu {
     }
 
     private static List<MenuItem> listChildren(String menuParent, MenuItemMap menuItemMap) {
-        System.out.println("--------calling loadChildren(" + menuParent + ", ...)");
+        LOG.info("Calling listChildren(..) for menuParent=" + menuParent);
         List<MenuItem> result = new ArrayList<>();
         if (!menuItemMap.containsKey(menuParent)) {
             //nothing to do
-            System.err.println("!mapOfLists.containsKey(menuParent) - nothing to do");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("!mapOfLists.containsKey(menuParent) - nothing to do");
+            }
             return result;
         }
         List<MenuItem> list = menuItemMap.getList(menuParent);
         if (list.isEmpty()) {
             //nothing to do
-            System.err.println("list.isEmpty() - nothing to do");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("list.isEmpty() - nothing to do");
+            }
             return result;
         }
 
         List<MenuItem> children = menuItemMap.getList(menuParent);
 
         for (MenuItem child : children) {
-            System.out.println("Found child: " + child.getFile());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Found child: " + child.getFile());
+            }
             result.add(child);
 
             if (child.isIndex()) {
@@ -155,7 +163,9 @@ public class Menu {
                 List<MenuItem> subChildren = listChildren(key, menuItemMap);
                 result.addAll(subChildren);
                 for (MenuItem subChild : subChildren) {
-                    System.out.println("Found subChild: " + subChild.getFile());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Found subChild: " + subChild.getFile());
+                    }
                 }
 
             }
@@ -193,13 +203,9 @@ public class Menu {
                         .append(e.getFile())
                         .append(e.getFile().equals(fileOfHighlightedMenuItem) ? "%%%%highlighted%%%%" : "")
                         .append("[")
-                        
                         .append((e.getLevelForMenu() == 1 && e.getFileName().equals("index.html") && !e.getFileWithoutFileName().isEmpty()) ? ((chapterNumber++) + ". ") : "")
                         //.append((!e.getFile().equals("index.html") && e.getFileName().equals("index.html")) ? " &#129977; " : ""/*"&#128196; "*/)
                         .append(e.createLabel())
-                        //.append("::(").append(e.createMenuParent()).append(")::").append(e.getFile())
-                        //.append(hidden ? " (hidden)" : "")
-                        //.append(":").append(e.getWeight())
                         .append("]").append("\n");
 
             }
@@ -207,7 +213,9 @@ public class Menu {
         }
         String result = asciidoc.toString();
 
-        System.out.println(result);
+        if(LOG.isDebugEnabled()) {
+                LOG.debug(result);
+        }
         return result;
 
     }

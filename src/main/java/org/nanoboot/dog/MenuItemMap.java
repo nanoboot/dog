@@ -47,11 +47,6 @@ public class MenuItemMap {
     }
 
         private static void sortMenuItemsWithTheSameParent(List<MenuItem> list) {
-            System.out.println("sortMenuItemsWithTheSameParent started");
-            System.out.println("before:");
-            for(MenuItem mi:list) {
-                System.out.println("--" + mi.getFile());
-            }
             List<MenuItem> nonIndexFiles = new ArrayList<>();
             List<MenuItem> indexFiles = new ArrayList<>();
             for (MenuItem e : list) {
@@ -68,12 +63,6 @@ public class MenuItemMap {
             list.clear();
             list.addAll(nonIndexFiles);
             list.addAll(indexFiles);
-//            Collections.sort(list, new Menu.MenuItemWeightComparator());
-            System.out.println("after:");
-            for(MenuItem mi:list) {
-                System.out.println("--" + mi.getFile());
-            }
-            System.out.println("sortMenuItemsWithTheSameParent started");
         }
     public void show() {
         for (String key : internalMap.keySet()) {

@@ -22,4 +22,5 @@ module dog {
     requires asciidoctorj.api;
     requires org.apache.commons.io;
     requires lombok;
+    requires org.apache.logging.log4j;
 }
