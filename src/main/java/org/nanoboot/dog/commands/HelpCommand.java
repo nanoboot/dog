@@ -44,7 +44,6 @@ public class HelpCommand implements Command {
     SYNOPSIS
         dog [command] [options]
         If no command is provided, then the default command gen is used. This means, if you run "dog", it is the same, as to run "dog gen".
-        If no command is provided, then the default command gen is used. This means, if you run "dog", it is the same, as to run "dog gen".
                            
     DESCRIPTION
         Dog generates static sites from Asciidoc.
